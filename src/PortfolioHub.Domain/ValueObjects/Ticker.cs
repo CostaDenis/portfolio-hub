@@ -7,6 +7,7 @@ public class Ticker : ValueObject
 
     public Ticker(string value)
     {
+        value = value.Trim().ToUpperInvariant();
         InvalidTickerException.ThrowIfInvalid(value);
         Value = value;
     }

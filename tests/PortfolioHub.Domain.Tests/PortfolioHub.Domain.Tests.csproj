@@ -15,4 +15,8 @@
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PortfolioHub.Domain\PortfolioHub.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

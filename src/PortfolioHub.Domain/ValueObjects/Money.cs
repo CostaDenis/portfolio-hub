@@ -2,29 +2,26 @@
 
 namespace PortfolioHub.Domain.ValueObjects;
 
-public class Money : ValueObject
+public class Money(decimal value) : ValueObject
 {
-
-    public Money(decimal value)
-    {
-        Value = value;
-        InvalidMoneyException.ThrowIfInvalid(value);
-    }
-
-    public decimal Value { get; private set; }
+    public decimal Value { get; } = value;
 
     public static implicit operator decimal(Money money) => money.Value;
     public static implicit operator Money(decimal value) => new(value);
 
-    public void Add(Money money)
-        => Value += money;
+    public Money Add(Money money)
+        => new(Value + money);
 
-    public void Subtract(Money money)
-        => Value -= money;
+    public Money Subtract(Money money)
+        => new(Value - money);
 
-    public void Multiply(Money money)
-        => Value *= money;
-    public void Divide(Money money)
-        => Value /= money;
+    public Money Multiply(Quantity quantity)
+        => new(Value * quantity);
+
+    public Money Divide(Quantity quantity)
+    {
+        UndeterminedResultException.ThrowIfInvalid(quantity);
+        return new(Value / quantity);
+    }
 
 }

@@ -10,20 +10,24 @@ public class Quantity : ValueObject
         Value = value;
     }
 
-    public int Value { get; private set; }
+    public int Value { get; }
 
     public static implicit operator int(Quantity quantity) => quantity.Value;
     public static implicit operator Quantity(int value) => new(value);
 
-    public void Increase(Quantity quantity)
-        => Value += quantity;
+    public Quantity Increase(Quantity quantity)
+        => new(Value + quantity);
+
 
     public bool CanDecrease(Quantity quantity)
+        => Value >= quantity;
+
+    public Quantity Decrease(Quantity quantity)
     {
-        decimal result = Value - quantity;
-        return result >= 0 ? true : false;
+        if (!CanDecrease(quantity))
+            InsufficientQuantityException.ThrowIfInvalid(Value, quantity.Value);
+
+        return new Quantity(Value - quantity);
     }
 
-    public void Decrease(Quantity quantity)
-        => Value += quantity;
 }

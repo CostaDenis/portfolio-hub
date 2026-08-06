@@ -7,11 +7,11 @@ public class AssetName : ValueObject
     public AssetName(string value)
     {
         InvalidAssetNameException.ThrowIfInvalid(value);
-        Value = value.Trim();
+        Value = value;
     }
-    
+
     public string Value { get; private set; }
-    
+
     public override string ToString() => Value;
     public static implicit operator string(AssetName assetName) => assetName.Value;
     public static implicit operator AssetName(string value) => new(value);
