@@ -1,4 +1,4 @@
-﻿using PortfolioHub.Domain.ValueObjects.Exceptions;
+﻿using PortfolioHub.Domain.Exceptions.ValueObjects;
 
 namespace PortfolioHub.Domain.ValueObjects;
 

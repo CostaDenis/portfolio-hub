@@ -1,4 +1,4 @@
-﻿using InvalidEmailException = PortfolioHub.Domain.ValueObjects.Exceptions.InvalidEmailException;
+﻿using PortfolioHub.Domain.Exceptions.ValueObjects;
 
 namespace PortfolioHub.Domain.ValueObjects;
 
@@ -10,9 +10,9 @@ public class Email : ValueObject
         InvalidEmailException.ThrowIfInvalid(value);
         Value = value;
     }
-    
+
     public string Value { get; private set; }
-    
+
     public override string ToString() => Value;
     public static implicit operator string(Email email) => email.Value;
     public static implicit operator Email(string value) => new(value);

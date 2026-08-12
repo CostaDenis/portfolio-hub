@@ -1,6 +1,6 @@
 ﻿using PortfolioHub.Domain.Enums;
+using PortfolioHub.Domain.Exceptions.ValueObjects;
 using PortfolioHub.Domain.ValueObjects;
-using PortfolioHub.Domain.ValueObjects.Exceptions;
 
 namespace PortfolioHub.Domain.Entities;
 
@@ -11,11 +11,10 @@ public class Wallet(WalletName name) : Entity
     public WalletName Name { get; private set; } = name;
     public IReadOnlyCollection<Transaction> Transactions { get { return _transactions.ToArray(); } }
 
-
-    public void ChangeName(WalletName walletName)
+    public void UpdateName(WalletName walletName)
         => Name = walletName;
 
-    public void BuyAsset(Asset asset, int quantity, Money unitPrice)
+    public void BuyAsset(Asset asset, Quantity quantity, Money unitPrice)
             => _transactions.Add(
                     new Transaction(asset, ETransactionType.Buy, quantity, unitPrice));
 
@@ -24,14 +23,14 @@ public class Wallet(WalletName name) : Entity
         if (!CanSell(asset, quantity))
             throw new InvalidQuantityException("Não possui quantidade suficiente para vender!");
 
-        var transaction = new Transaction(asset, ETransactionType.Buy, quantity, unitPrice);
+        var transaction = new Transaction(asset, ETransactionType.Sell, quantity, unitPrice);
         _transactions.Add(transaction);
     }
 
-    private bool CanSell(Asset asset, int quantity)
+    private bool CanSell(Asset asset, Quantity quantity)
         => GetCurrentQuantity(asset) >= quantity;
 
-    private Quantity GetCurrentQuantity(Asset asset)
+    public Quantity GetCurrentQuantity(Asset asset)
     {
         var quantity = 0;
 

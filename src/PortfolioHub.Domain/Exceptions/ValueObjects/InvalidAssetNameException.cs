@@ -1,4 +1,4 @@
-﻿namespace PortfolioHub.Domain.ValueObjects.Exceptions;
+﻿namespace PortfolioHub.Domain.Exceptions.ValueObjects;
 
 public class InvalidAssetNameException(string message) : BaseException(message)
 {

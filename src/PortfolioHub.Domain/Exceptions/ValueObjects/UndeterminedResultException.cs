@@ -1,4 +1,4 @@
-namespace PortfolioHub.Domain.ValueObjects.Exceptions;
+namespace PortfolioHub.Domain.Exceptions.ValueObjects;
 
 public partial class UndeterminedResultException(string message) : BaseException(message)
 {

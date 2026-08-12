@@ -1,5 +1,5 @@
+using PortfolioHub.Domain.Exceptions.ValueObjects;
 using PortfolioHub.Domain.ValueObjects;
-using PortfolioHub.Domain.ValueObjects.Exceptions;
 
 namespace PortfolioHub.Domain.Tests.ValueObjects;
 

@@ -1,16 +1,29 @@
 ﻿using PortfolioHub.Domain.Enums;
+using PortfolioHub.Domain.Exceptions;
 using PortfolioHub.Domain.ValueObjects;
 
 namespace PortfolioHub.Domain.Entities;
 
-public class Transaction(Asset asset, ETransactionType type,
-    int quantity, Money unitPrice) : Entity
+public class Transaction : Entity
 {
-    public Asset Asset { get; private set; } = asset;
-    public ETransactionType Type { get; private set; } = type;
-    public DateTime Date { get; private set; } = DateTime.Now;
-    public int Quantity { get; private set; } = quantity;
-    public Money UnitPrice { get; private set; } = unitPrice;
+
+    public Transaction(Asset asset, ETransactionType type,
+    Quantity quantity, Money unitPrice)
+    {
+        InvalidPriceException.ThrowIfInvalid(unitPrice);
+
+        Asset = asset;
+        Type = type;
+        Date = DateTime.Now;
+        Quantity = quantity;
+        UnitPrice = unitPrice;
+    }
+
+    public Asset Asset { get; private set; }
+    public ETransactionType Type { get; private set; }
+    public DateTime Date { get; private set; }
+    public Quantity Quantity { get; private set; }
+    public Money UnitPrice { get; private set; }
     public Money Total => UnitPrice * Quantity;
 
     public bool IsBuy()
