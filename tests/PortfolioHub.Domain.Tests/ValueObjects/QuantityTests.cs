@@ -24,7 +24,7 @@ public class QuantityTests
     [TestCategory("Quantity Tests")]
     public void Should_Return_Success_When_Convert_Quantity_To_Int()
     {
-        int number = _quantity;
+        decimal number = _quantity;
         Assert.AreEqual(number, _quantity.Value);
     }
 

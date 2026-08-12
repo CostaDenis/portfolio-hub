@@ -32,7 +32,7 @@ public class Wallet(WalletName name) : Entity
 
     public Quantity GetCurrentQuantity(Asset asset)
     {
-        var quantity = 0;
+        decimal quantity = 0;
 
         foreach (var transaction in GetTransactions(asset))
         {

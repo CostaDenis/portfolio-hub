@@ -4,20 +4,19 @@ namespace PortfolioHub.Domain.ValueObjects;
 
 public class Quantity : ValueObject
 {
-    public Quantity(int value)
+    public Quantity(decimal value)
     {
         InvalidQuantityException.ThrowIfInvalid(value);
         Value = value;
     }
 
-    public int Value { get; }
+    public decimal Value { get; }
 
-    public static implicit operator int(Quantity quantity) => quantity.Value;
-    public static implicit operator Quantity(int value) => new(value);
+    public static implicit operator decimal(Quantity quantity) => quantity.Value;
+    public static implicit operator Quantity(decimal value) => new(value);
 
     public Quantity Increase(Quantity quantity)
         => new(Value + quantity);
-
 
     public bool CanDecrease(Quantity quantity)
         => Value >= quantity;
