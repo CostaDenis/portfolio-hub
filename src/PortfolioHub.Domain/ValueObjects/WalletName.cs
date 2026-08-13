@@ -14,6 +14,12 @@ public class WalletName : ValueObject
     public string Value { get; private set; }
 
     public override string ToString() => Value;
+
+    protected override IEnumerable<object?> GetEqualityComponents()
+    {
+        yield return Value;
+    }
+
     public static implicit operator string(WalletName walletName) => walletName.Value;
     public static implicit operator WalletName(string value) => new(value);
 }

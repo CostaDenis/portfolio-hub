@@ -58,4 +58,12 @@ public class AssetTests
         Assert.AreEqual(EAssetType.RealStateFund, _asset.Type);
     }
 
+    [TestMethod]
+    [TestCategory("Asset Tests")]
+    public void Should_Update_MarketPrice()
+    {
+        _asset.UpdateMarketPrice(new MarketPrice(350000m));
+        Assert.AreEqual(350000m, _asset.MarketPrice.Price.Value);
+    }
+
 }

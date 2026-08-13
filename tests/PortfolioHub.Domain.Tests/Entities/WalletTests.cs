@@ -1,5 +1,6 @@
 using PortfolioHub.Domain.Entities;
 using PortfolioHub.Domain.Enums;
+using PortfolioHub.Domain.Exceptions;
 using PortfolioHub.Domain.Exceptions.ValueObjects;
 using PortfolioHub.Domain.ValueObjects;
 
@@ -90,7 +91,7 @@ public class WalletTests
     {
         _wallet.BuyAsset(_asset, 2, 105.0m);
 
-        Assert.Throws<InvalidQuantityException>(() => _wallet.SellAsset(_asset, 5, 106.0m));
+        Assert.Throws<InsufficientBalance>(() => _wallet.SellAsset(_asset, 5, 106.0m));
     }
 
     [TestMethod]

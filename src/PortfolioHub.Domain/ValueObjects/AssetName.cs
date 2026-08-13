@@ -13,6 +13,14 @@ public class AssetName : ValueObject
     public string Value { get; private set; }
 
     public override string ToString() => Value;
+
+    protected override IEnumerable<object?> GetEqualityComponents()
+    {
+        yield return Value;
+    }
+
     public static implicit operator string(AssetName assetName) => assetName.Value;
     public static implicit operator AssetName(string value) => new(value);
+
+
 }

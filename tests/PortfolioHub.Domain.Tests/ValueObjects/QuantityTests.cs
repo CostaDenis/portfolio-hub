@@ -14,7 +14,6 @@ public class QuantityTests
     public void Should_Return_Exception_When_Quantity_Is_Negative()
         => Assert.Throws<InvalidQuantityException>(() => new Quantity(-1));
 
-
     [TestMethod]
     [TestCategory("Quantity Tests")]
     public void Should_Return_Success_When_Quantity_Is_Valid()
@@ -91,4 +90,8 @@ public class QuantityTests
         Assert.AreEqual(0, decreasedQuantity.Value);
     }
 
+    [TestMethod]
+    [TestCategory("Quantity Tests")]
+    public void Should_Consider_Equal_Values_As_Equal()
+        => Assert.AreEqual(new Quantity(1), _quantity);
 }

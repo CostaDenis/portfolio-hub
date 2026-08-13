@@ -24,4 +24,8 @@ public class Money(decimal value) : ValueObject
         return new(Value / quantity);
     }
 
+    protected override IEnumerable<object?> GetEqualityComponents()
+    {
+        yield return Value;
+    }
 }

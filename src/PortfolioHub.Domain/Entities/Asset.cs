@@ -31,4 +31,7 @@ public class Asset : Entity
     public void UpdateType(EAssetType type)
         => Type = type;
 
+    public void UpdateMarketPrice(MarketPrice marketPrice)
+        => MarketPrice = marketPrice;
+
 }

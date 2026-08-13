@@ -12,7 +12,7 @@ public class AssetNameTests
 
     [TestMethod]
     [TestCategory("AssetName Tests")]
-    public void Should_Return_Exception_When_AssetNameValue_Is_Null()
+    public void Should_Return_Exception_When_AssetNameValue_Is_Empty()
         => Assert.Throws<InvalidAssetNameException>(() => new AssetName(""));
 
     [TestMethod]
@@ -58,5 +58,10 @@ public class AssetNameTests
         AssetName assetName = name;
         Assert.AreEqual(assetName.Value, name);
     }
+
+    [TestMethod]
+    [TestCategory("AssetName Tests")]
+    public void Should_Consider_Equal_Values_As_Equal()
+        => Assert.AreEqual(new AssetName(_value), _assetName);
 
 }

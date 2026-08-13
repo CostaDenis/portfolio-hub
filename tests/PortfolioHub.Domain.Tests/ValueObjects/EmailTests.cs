@@ -49,4 +49,10 @@ public class EmailTests
 
         Assert.AreEqual(value, email.Value);
     }
+
+    [TestMethod]
+    [TestCategory("Email Tests")]
+    public void Should_Consider_Equal_Values_As_Equal()
+        => Assert.AreEqual(new Email("denis@gmail.com"), _emailValid);
+
 }

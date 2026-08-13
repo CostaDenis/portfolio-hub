@@ -14,6 +14,12 @@ public class Email : ValueObject
     public string Value { get; private set; }
 
     public override string ToString() => Value;
+
+    protected override IEnumerable<object?> GetEqualityComponents()
+    {
+        yield return Value;
+    }
+
     public static implicit operator string(Email email) => email.Value;
     public static implicit operator Email(string value) => new(value);
 }

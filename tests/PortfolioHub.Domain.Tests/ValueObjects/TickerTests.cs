@@ -6,7 +6,7 @@ namespace PortfolioHub.Domain.Tests.ValueObjects;
 [TestClass]
 public class TickerTests
 {
-    private readonly Ticker _ticker = new Ticker("MXRF11");
+    private readonly Ticker _ticker = new("MXRF11");
 
     [TestMethod]
     [TestCategory("Ticker Tests")]
@@ -74,4 +74,26 @@ public class TickerTests
 
         Assert.AreEqual(value, ticker.Value);
     }
+
+    [TestMethod]
+    [TestCategory("Ticker Tests")]
+    public void Should_Consider_Equal_Values_As_Equal()
+        => Assert.AreEqual(new Ticker("mxrf11"), _ticker);
+
+    [TestMethod]
+    [TestCategory("Ticker Tests")]
+    public void Should_Consider_Different_Values_As_Different()
+        => Assert.AreNotEqual(new Ticker("BTCI11"), _ticker);
+
+    [TestMethod]
+    [TestCategory("Ticker Tests")]
+    public void Should_Generate_Equal_HashCodes_For_Equal_Values()
+        => Assert.AreEqual(new Ticker("BTC").GetHashCode(), new Ticker("BTC").GetHashCode());
+
+    [TestMethod]
+    [TestCategory("Ticker Tests")]
+    public void Should_Generate_Different_HashCodes_For_Different_Values()
+        => Assert.AreNotEqual(new Ticker("BTCI11").GetHashCode(), new Ticker("BTC").GetHashCode());
+
+
 }

@@ -29,4 +29,8 @@ public class Quantity : ValueObject
         return new Quantity(Value - quantity);
     }
 
+    protected override IEnumerable<object?> GetEqualityComponents()
+    {
+        yield return Value;
+    }
 }

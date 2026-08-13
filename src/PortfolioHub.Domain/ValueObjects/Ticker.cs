@@ -15,6 +15,12 @@ public class Ticker : ValueObject
     public string Value { get; private set; }
 
     public override string ToString() => Value;
+
+    protected override IEnumerable<object?> GetEqualityComponents()
+    {
+        yield return Value;
+    }
+
     public static implicit operator string(Ticker ticker) => ticker.Value;
     public static implicit operator Ticker(string value) => new(value);
 }

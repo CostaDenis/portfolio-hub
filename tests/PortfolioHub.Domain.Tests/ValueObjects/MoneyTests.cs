@@ -134,4 +134,9 @@ public class MoneyTests
         Assert.AreEqual(10.0m, newMoney.Value);
         Assert.AreEqual(20.0m, _money.Value);
     }
+
+    [TestMethod]
+    [TestCategory("Money Tests")]
+    public void Should_Consider_Equal_Values_As_Equal()
+        => Assert.AreEqual(new Money(20.0m), _money);
 }

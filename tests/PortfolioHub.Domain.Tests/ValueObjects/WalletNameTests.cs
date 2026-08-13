@@ -53,4 +53,9 @@ public class WalletNameTests
         Assert.AreEqual(value, walletName.Value);
     }
 
+    [TestMethod]
+    [TestCategory("WalletName Tests")]
+    public void Should_Consider_Equal_Values_As_Equal()
+        => Assert.AreEqual(new WalletName("Ações"), new WalletName("Ações"));
+
 }

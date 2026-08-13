@@ -14,7 +14,7 @@ public class Transaction : Entity
 
         Asset = asset;
         Type = type;
-        Date = DateTime.Now;
+        Date = DateTime.UtcNow;
         Quantity = quantity;
         UnitPrice = unitPrice;
     }
