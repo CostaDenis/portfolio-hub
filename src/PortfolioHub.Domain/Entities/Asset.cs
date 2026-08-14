@@ -28,6 +28,7 @@ public class Asset : Entity
 
     public void UpdateTicker(Ticker ticker)
         => Ticker = ticker;
+
     public void UpdateType(EAssetType type)
         => Type = type;
 

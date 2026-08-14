@@ -61,6 +61,7 @@ public class Wallet(WalletName name) : Entity
         _dividends.Add(new Dividend(
             asset, GetCurrentQuantity(asset), valuePerShare, date));
     }
+
     public IReadOnlyCollection<Dividend> GetDividendsByAsset(Asset asset)
         => _dividends.Where(x => x.Asset.Id == asset.Id).ToList().AsReadOnly();
 
