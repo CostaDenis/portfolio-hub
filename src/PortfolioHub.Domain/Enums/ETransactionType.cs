@@ -3,6 +3,5 @@
 public enum ETransactionType
 {
     Buy,
-    Sell,
-    Dividend
+    Sell
 }

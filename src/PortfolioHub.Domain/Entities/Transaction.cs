@@ -32,6 +32,4 @@ public class Transaction : Entity
     public bool IsSell()
         => Type == ETransactionType.Sell;
 
-    public bool IsDividend()
-        => Type == ETransactionType.Dividend;
 }

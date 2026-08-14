@@ -83,21 +83,4 @@ public class TransactionTests
         Assert.IsTrue(transaction.IsSell());
     }
 
-    [TestMethod]
-    [TestCategory("Transaction Tests")]
-    public void Should_Return_Success_When_IsDividend_Method_Is_Valid()
-    {
-        var transaction = new Transaction(
-            new Asset(new AssetName("XP Malls"),
-                        new Ticker("XPML11"),
-                        EAssetType.RealStateFund,
-                        new MarketPrice(105.0m)
-                        ),
-            ETransactionType.Dividend,
-            15,
-            new Money(0.92m)
-        );
-
-        Assert.IsTrue(transaction.IsDividend());
-    }
 }

@@ -1,6 +1,5 @@
 ﻿using PortfolioHub.Domain.Enums;
 using PortfolioHub.Domain.Exceptions;
-using PortfolioHub.Domain.Exceptions.ValueObjects;
 using PortfolioHub.Domain.ValueObjects;
 
 namespace PortfolioHub.Domain.Entities;
@@ -8,9 +7,11 @@ namespace PortfolioHub.Domain.Entities;
 public class Wallet(WalletName name) : Entity
 {
     private readonly List<Transaction> _transactions = [];
+    private readonly List<Dividend> _dividends = [];
 
     public WalletName Name { get; private set; } = name;
     public IReadOnlyCollection<Transaction> Transactions { get { return _transactions.ToArray(); } }
+    public IReadOnlyCollection<Dividend> Dividends { get { return _dividends.ToArray(); } }
 
     public void UpdateName(WalletName walletName)
         => Name = walletName;
@@ -50,4 +51,37 @@ public class Wallet(WalletName name) : Entity
 
     public IReadOnlyCollection<Transaction> GetTransactions(Asset asset)
         => _transactions.Where(x => x.Asset.Id == asset.Id).ToList().AsReadOnly();
+
+    public void ReceiveDividend(Asset asset, Money valuePerShare, DateTime date)
+    {
+        if (!ContainsAsset(asset))
+            throw new InsufficientAssetQuantityException(
+                "Não possui quantidade suficiente para receber dividendo!");
+
+        _dividends.Add(new Dividend(
+            asset, GetCurrentQuantity(asset), valuePerShare, date));
+    }
+    public IReadOnlyCollection<Dividend> GetDividendsByAsset(Asset asset)
+        => _dividends.Where(x => x.Asset.Id == asset.Id).ToList().AsReadOnly();
+
+    public Money GetTotalDividendsByAsset(Asset asset)
+    {
+        Money totalReceived = 0;
+        foreach (var dividend in _dividends)
+        {
+            if (dividend.Asset.Id == asset.Id)
+                totalReceived += dividend.Total;
+        }
+
+        return totalReceived;
+    }
+
+    public Money GetTotalDividends()
+    {
+        Money totalReceived = 0;
+        foreach (var dividend in _dividends)
+            totalReceived += dividend.Total;
+
+        return totalReceived;
+    }
 }
