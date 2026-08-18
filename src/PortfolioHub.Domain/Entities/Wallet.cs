@@ -23,7 +23,7 @@ public class Wallet(WalletName name) : Entity
     public void SellAsset(Asset asset, Quantity quantity, Money unitPrice)
     {
         if (!CanSell(asset, quantity))
-            throw new InsufficientBalance("Não possui quantidade suficiente para vender!");
+            throw new InsufficientBalanceException("Não possui quantidade suficiente para vender!");
 
         var transaction = new Transaction(asset, ETransactionType.Sell, quantity, unitPrice);
         _transactions.Add(transaction);

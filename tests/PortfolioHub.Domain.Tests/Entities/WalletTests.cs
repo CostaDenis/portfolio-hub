@@ -98,7 +98,7 @@ public class WalletTests
     {
         _wallet.BuyAsset(_xpml11, 2, 105.0m);
 
-        Assert.Throws<InsufficientBalance>(() => _wallet.SellAsset(_xpml11, 5, 106.0m));
+        Assert.Throws<InsufficientBalanceException>(() => _wallet.SellAsset(_xpml11, 5, 106.0m));
     }
 
     [TestMethod]
