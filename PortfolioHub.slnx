@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/PortfolioHub.Application/PortfolioHub.Application.csproj" />
     <Project Path="src/PortfolioHub.Domain/PortfolioHub.Domain.csproj" />
+    <Project Path="src/PortfolioHub.Infrastructure/PortfolioHub.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PortfolioHub.Domain.Tests/PortfolioHub.Domain.Tests.csproj" />

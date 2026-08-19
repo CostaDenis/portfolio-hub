@@ -17,7 +17,7 @@ public class GetAssetsQueryHandlerTests
         var xpml11 = new Asset(new AssetName("XP Malls"), new Ticker("XPML11"),
             EAssetType.RealStateFund, new MarketPrice(110m));
         var bitcoin = new Asset(new AssetName("Bitcoin"), new Ticker("BTC"),
-            EAssetType.Cryptocurrency, new MarketPrice(650_000m));
+            EAssetType.Cryptocurrency, new MarketPrice(650000m));
         var repository = new FakeAssetRepository([xpml11, bitcoin]);
         var handler = new GetAssetsQueryHandler(repository);
 

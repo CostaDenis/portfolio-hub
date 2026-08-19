@@ -8,7 +8,7 @@ public class InvalidAssetNameException(string message) : BaseException(message)
         if (string.IsNullOrWhiteSpace(value))
             ThrowIf(true, new InvalidAssetNameException("O nome do ativo não pode ser vazio!"));
 
-        if (value.Length is < 3 or > 20)
-            ThrowIf(true, new InvalidAssetNameException("O nome do ativo deve ter entre 3 e 20 caracteres!"));
+        if (value.Length is < 3 or > 60)
+            ThrowIf(true, new InvalidAssetNameException("O nome do ativo deve ter entre 3 e 60 caracteres!"));
     }
 }
