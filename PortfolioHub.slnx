@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/PortfolioHub.Api/PortfolioHub.Api.csproj" />
     <Project Path="src/PortfolioHub.Application/PortfolioHub.Application.csproj" />
     <Project Path="src/PortfolioHub.Domain/PortfolioHub.Domain.csproj" />
     <Project Path="src/PortfolioHub.Infrastructure/PortfolioHub.Infrastructure.csproj" />

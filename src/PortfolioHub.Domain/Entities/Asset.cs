@@ -7,6 +7,13 @@ namespace PortfolioHub.Domain.Entities;
 public class Asset : Entity
 {
 
+    private Asset()
+    {
+        Name = null!;
+        Ticker = null!;
+        MarketPrice = null!;
+    }
+
     public Asset(AssetName name, Ticker ticker,
     EAssetType type, MarketPrice marketPrice)
     {

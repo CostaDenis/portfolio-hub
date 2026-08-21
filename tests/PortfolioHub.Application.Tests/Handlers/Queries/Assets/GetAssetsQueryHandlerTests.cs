@@ -21,7 +21,7 @@ public class GetAssetsQueryHandlerTests
         var repository = new FakeAssetRepository([xpml11, bitcoin]);
         var handler = new GetAssetsQueryHandler(repository);
 
-        var result = await handler.HandleAsync(new GetAssetsQuery(), CancellationToken.None);
+        var result = await handler.HandleAsync(CancellationToken.None);
         var xpml11Dto = result.Single(asset => asset.AssetId == xpml11.Id);
         var bitcoinDto = result.Single(asset => asset.AssetId == bitcoin.Id);
 

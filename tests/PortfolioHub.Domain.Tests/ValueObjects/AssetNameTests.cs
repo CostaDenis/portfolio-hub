@@ -27,8 +27,9 @@ public class AssetNameTests
 
     [TestMethod]
     [TestCategory("AssetName Tests")]
-    public void Should_Return_Exception_When_AssetNameValue_Is_Greater_Than_Twenty()
-        => Assert.Throws<InvalidAssetNameException>(() => new AssetName("abcdefghijklmnopqrstuvw"));
+    public void Should_Return_Exception_When_AssetNameValue_Is_Greater_Than_Sixty()
+        => Assert.Throws<InvalidAssetNameException>
+            (() => new AssetName("abcdefghijklmnopqrstuvwabcdefghijklmnopqrstuvwabcdefghijklmnj"));
 
     [TestMethod]
     [TestCategory("AssetName Tests")]

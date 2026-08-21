@@ -1,5 +1,4 @@
 using PortfolioHub.Application.DTOs;
-using PortfolioHub.Application.Queries.Assets;
 using PortfolioHub.Application.Repositories;
 
 namespace PortfolioHub.Application.Handlers.Queries.Assets;
@@ -7,7 +6,7 @@ namespace PortfolioHub.Application.Handlers.Queries.Assets;
 public class GetAssetsQueryHandler(IAssetRepository assetRepository)
 {
 
-    public async Task<List<AssetDTO>> HandleAsync(GetAssetsQuery query, CancellationToken cancellationToken)
+    public async Task<List<AssetDTO>> HandleAsync(CancellationToken cancellationToken)
     {
         var assets = await assetRepository.GetAllAssets(cancellationToken);
 

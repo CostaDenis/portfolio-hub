@@ -14,6 +14,7 @@ public class GetAssetByIdQueryHandler(IAssetRepository assetRepository)
         if (asset is null)
             return null;
 
-        return new AssetDTO(asset.Id, asset.Name, asset.Ticker, asset.Type, asset.MarketPrice.Price.Value);
+        return new AssetDTO
+            (asset.Id, asset.Name, asset.Ticker, asset.Type, asset.MarketPrice.Price.Value);
     }
 }

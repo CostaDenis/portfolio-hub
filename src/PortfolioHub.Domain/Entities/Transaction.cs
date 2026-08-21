@@ -7,6 +7,13 @@ namespace PortfolioHub.Domain.Entities;
 public class Transaction : Entity
 {
 
+    private Transaction()
+    {
+        Asset = null!;
+        Quantity = null!;
+        UnitPrice = null!;
+    }
+
     public Transaction(Asset asset, ETransactionType type,
     Quantity quantity, Money unitPrice)
     {

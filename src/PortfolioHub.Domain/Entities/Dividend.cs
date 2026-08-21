@@ -7,6 +7,13 @@ namespace PortfolioHub.Domain.Entities;
 public class Dividend : Entity
 {
 
+    private Dividend()
+    {
+        Asset = null!;
+        Quantity = null!;
+        ValuePerShare = null!;
+    }
+
     public Dividend(Asset asset, Quantity quantity,
         Money valuePerShare, DateTime date)
     {
