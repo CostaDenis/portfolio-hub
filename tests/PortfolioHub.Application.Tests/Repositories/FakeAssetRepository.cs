@@ -1,5 +1,6 @@
 using PortfolioHub.Application.Repositories;
 using PortfolioHub.Domain.Entities;
+using PortfolioHub.Domain.ValueObjects;
 
 namespace PortfolioHub.Application.Tests.Repositories;
 
@@ -26,6 +27,8 @@ public class FakeAssetRepository : IAssetRepository
     private Asset? _asset;
     private readonly List<Asset> _assets = [];
 
+    public bool CreateWasCalled { get; private set; }
+    public Asset? CreatedAsset { get; private set; }
     public bool UpdateWasCalled { get; private set; }
     public Asset? UpdatedAsset { get; private set; }
 
@@ -35,6 +38,15 @@ public class FakeAssetRepository : IAssetRepository
     public Task<Asset?> GetByIdAsync(Guid assetId, CancellationToken cancellationToken)
         => Task.FromResult(_assets.FirstOrDefault(asset => asset.Id == assetId));
 
+    public Task CreateAsync(Asset asset, CancellationToken cancellationToken)
+    {
+        CreateWasCalled = true;
+        CreatedAsset = asset;
+        _assets.Add(asset);
+
+        return Task.CompletedTask;
+    }
+
     public Task UpdateAsync(Asset asset, CancellationToken cancellationToken)
     {
         UpdateWasCalled = true;
@@ -42,4 +54,8 @@ public class FakeAssetRepository : IAssetRepository
 
         return Task.CompletedTask;
     }
+
+    public async Task<bool> ExistsByTickerAsync(Ticker ticker, CancellationToken cancellationToken)
+        => await Task.FromResult(
+        _assets.Any(asset => asset.Ticker.Equals(ticker)));
 }

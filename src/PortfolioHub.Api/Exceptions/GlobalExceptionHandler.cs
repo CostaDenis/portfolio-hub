@@ -28,7 +28,8 @@ public class GlobalExceptionHandler : IExceptionHandler
                 exception.Message);
 
         if (exception is InsufficientBalanceException
-            or InsufficientAssetQuantityException)
+            or InsufficientAssetQuantityException
+            or TickerAlreadyUsedException)
             return await WriteProblemAsync(
                 httpContext,
                 StatusCodes.Status409Conflict,
