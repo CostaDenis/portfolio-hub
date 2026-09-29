@@ -15,7 +15,8 @@ public class AssetMapping : IEntityTypeConfiguration<Asset>
 
         builder.Property(x => x.Id)
             .HasColumnName("Id")
-            .HasColumnType("UNIQUEIDENTIFIER");
+            .HasColumnType("UNIQUEIDENTIFIER")
+            .ValueGeneratedNever();
 
         builder.Property(x => x.Name)
             .HasColumnName("Name")

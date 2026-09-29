@@ -15,7 +15,8 @@ public class TransactionMapping : IEntityTypeConfiguration<Transaction>
 
         builder.Property(x => x.Id)
             .HasColumnName("Id")
-            .HasColumnType("UNIQUEIDENTIFIER");
+            .HasColumnType("UNIQUEIDENTIFIER")
+            .ValueGeneratedNever();
 
         builder.HasOne(x => x.Asset)
             .WithMany()

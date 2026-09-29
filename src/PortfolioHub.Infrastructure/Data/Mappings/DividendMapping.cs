@@ -15,7 +15,8 @@ public class DividendMapping : IEntityTypeConfiguration<Dividend>
 
         builder.Property(x => x.Id)
             .HasColumnName("Id")
-            .HasColumnType("UNIQUEIDENTIFIER");
+            .HasColumnType("UNIQUEIDENTIFIER")
+            .ValueGeneratedNever();
 
         builder.HasOne(x => x.Asset)
             .WithMany()
