@@ -84,6 +84,27 @@ public class WalletTests
 
     [TestMethod]
     [TestCategory("Wallet Tests")]
+    [DataRow(3)]
+    [DataRow(10)]
+    public void Should_Return_Current_Quantity_When_Sale_Is_Loaded_Before_Buy(int soldQuantity)
+    {
+        _wallet.BuyAsset(_xpml11, 10m, 105m);
+        _wallet.SellAsset(_xpml11, soldQuantity, 110m);
+        _wallet.BuyAsset(_btci11, 5m, 9.1m);
+
+        // Simula uma ordem de materialização diferente, sem expor a coleção no domínio.
+        var field = typeof(Wallet).GetField("_transactions",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        Assert.IsNotNull(field);
+        var transactions = (List<Transaction>)field.GetValue(_wallet)!;
+        transactions.Reverse();
+
+        Assert.AreEqual(10m - soldQuantity, _wallet.GetCurrentQuantity(_xpml11).Value);
+        Assert.AreEqual(5m, _wallet.GetCurrentQuantity(_btci11).Value);
+    }
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
     public void Should_Return_Zero_When_Asset_Is_Not_In_Wallet()
         => Assert.AreEqual(0, _wallet.GetCurrentQuantity(_xpml11).Value);
 

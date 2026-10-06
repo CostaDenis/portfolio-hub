@@ -7,6 +7,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PortfolioHub.Domain.Tests/PortfolioHub.Domain.Tests.csproj" />
+    <Project Path="tests/PortfolioHub.Api.Tests/PortfolioHub.Api.Tests.csproj" />
     <Project Path="tests/PortfolioHub.Application.Tests/PortfolioHub.Application.Tests.csproj" />
     <Project Path="tests/PortfolioHub.Infrastructure.Tests/PortfolioHub.Infrastructure.Tests.csproj" />
   </Folder>

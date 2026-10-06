@@ -15,7 +15,8 @@ public class UpdateAssetEndpoint : IEndpoint
             .WithDescription("Atualiza Ativo")
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status400BadRequest)
-            .Produces(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status409Conflict);
 
     private static async Task<IResult> HandleAsync(
         Guid assetId,

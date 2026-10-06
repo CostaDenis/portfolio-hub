@@ -15,3 +15,6 @@ app.MapEndpoints();
 app.ConfigureDevEnvironment();
 
 app.Run();
+
+// Permite que os testes hospedem a API com WebApplicationFactory<Program>.
+public partial class Program { }

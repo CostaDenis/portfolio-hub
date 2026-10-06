@@ -1,4 +1,5 @@
 using PortfolioHub.Application.Commands.Assets;
+using PortfolioHub.Application.Exceptions;
 using PortfolioHub.Application.Repositories;
 using PortfolioHub.Application.Services;
 
@@ -8,6 +9,12 @@ public class UpdateAssetCommandHandler(IAssetRepository assetRepository, AssetFi
 {
     public async Task HandleAsync(UpdateAssetCommand command, CancellationToken cancellationToken)
     {
+        var tickerAlreadyRegistred = await assetRepository
+            .ExistsByTickerAsync(command.Ticker, cancellationToken);
+
+        if (tickerAlreadyRegistred)
+            throw new TickerAlreadyUsedException();
+
         var asset = await assetFinder.GetRequiredAsync(command.AssetId, cancellationToken);
 
         asset.UpdateName(command.AssetName);

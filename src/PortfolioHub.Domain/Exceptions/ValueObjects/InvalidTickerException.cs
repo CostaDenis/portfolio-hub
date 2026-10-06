@@ -12,6 +12,6 @@ public class InvalidTickerException(string message) : BaseException(message)
             ThrowIf(true, new InvalidTickerException("O Ticker deve conter entre 2 e 10 caracteres!"));
 
         if (!value.All(char.IsLetterOrDigit))
-            ThrowIf(true, new InvalidTickerException("O Ticker pode conter apenas letrar e digitos!"));
+            ThrowIf(true, new InvalidTickerException("O Ticker pode conter apenas letras e digitos!"));
     }
 }

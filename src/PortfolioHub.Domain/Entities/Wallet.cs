@@ -34,16 +34,16 @@ public class Wallet(WalletName name) : Entity
 
     public Quantity GetCurrentQuantity(Asset asset)
     {
-        Quantity quantity = 0;
+        decimal quantity = 0;
 
         foreach (var transaction in GetTransactions(asset))
         {
             if (transaction.IsBuy())
-                quantity += transaction.Quantity;
+                quantity += transaction.Quantity.Value;
             else if (transaction.IsSell())
-                quantity -= transaction.Quantity;
+                quantity -= transaction.Quantity.Value;
         }
-        return quantity;
+        return new Quantity(quantity);
     }
 
     public bool ContainsAsset(Asset asset)
