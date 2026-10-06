@@ -20,6 +20,7 @@ public static class Endpoint
         endpoints.MapGroup("v1/assets")
             .WithTags("Assets")
             // .RequireAuthorization()
+            .MapEndpoint<CreateAssetEndpoint>()
             .MapEndpoint<GetAssetByIdEndpoint>()
             .MapEndpoint<GetAssetsEndpoint>()
             .MapEndpoint<UpdateAssetEndpoint>()

@@ -29,7 +29,8 @@ public static class BuilderExtension
         builder.Services.AddScoped<AssetFinder>();
 
 
-        //Api services
+        //Application services
+        builder.Services.AddScoped<CreateAssetCommandHandler>();
         builder.Services.AddScoped<UpdateAssetCommandHandler>();
         builder.Services.AddScoped<UpdateMarketPriceCommandHandler>();
         builder.Services.AddScoped<GetAssetByIdQueryHandler>();
