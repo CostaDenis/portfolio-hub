@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme static {
+    --color-page: #F8FAFC;
+    --color-surface: #FFFFFF;
+    --color-sidebar: #0F172A;
+    --color-ink: #0F172A;
+    --color-muted: #475569;
+    --color-line: #E2E8F0;
+    --color-primary: #047857;
+    --color-primary-hover: #065F46;
+    --color-link: #1D4ED8;
+    --color-success: #15803D;
+    --color-danger: #B91C1C;
+    --color-warning: #B45309;
+
+    --animate-loading-bar: loading-bar 1.4s ease-in-out infinite alternate;
+
+    @keyframes loading-bar {
+        from { transform: translateX(0); }
+        to { transform: translateX(150%); }
+    }
+}

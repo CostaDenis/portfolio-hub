@@ -1,0 +1,94 @@
+@page "/paleta"
+@layout PaletteLayout
+
+<PageTitle>Paleta | PortfolioHub</PageTitle>
+
+<div class="min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
+    <aside class="bg-sidebar p-6 text-surface lg:p-8">
+        <p class="text-xl font-bold tracking-tight">PortfolioHub.</p>
+        <p class="mt-2 text-sm text-surface/70">Seu patrimônio, com clareza.</p>
+        <nav aria-label="Navegação da demonstração" class="mt-8 flex flex-wrap gap-3 lg:flex-col">
+            <a href="#overview" class="rounded-lg bg-surface/10 px-4 py-3 font-medium focus-visible:outline-2 focus-visible:outline-offset-4">Visão geral</a>
+            <a href="#colors" class="rounded-lg px-4 py-3 text-surface/80 hover:bg-surface/10 focus-visible:outline-2 focus-visible:outline-offset-4">Cores do projeto</a>
+            <a href="/" class="rounded-lg px-4 py-3 text-surface/80 hover:bg-surface/10 focus-visible:outline-2 focus-visible:outline-offset-4">Voltar ao início</a>
+        </nav>
+        <p class="mt-10 text-xs text-surface/60">Prévia visual · dados fictícios</p>
+    </aside>
+
+    <main id="overview" class="mx-auto w-full max-w-6xl min-w-0 p-6 sm:p-10">
+        <header class="mb-8 flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-widest text-muted">Minha carteira</p>
+                <h1 class="mt-2 text-3xl font-semibold tracking-tight">Visão geral</h1>
+                <p class="mt-2 text-sm text-muted">Uma amostra da identidade visual do PortfolioHub.</p>
+            </div>
+            <button type="button" @onclick="ShowDemoMessage"
+                    class="rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-surface transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+                + Nova operação
+            </button>
+        </header>
+
+        <p role="status" class="mb-4 text-sm text-link">@demoMessage</p>
+
+        <section aria-label="Resumo da carteira" class="grid gap-4 md:grid-cols-3">
+            <article class="rounded-xl border border-line bg-surface p-6">
+                <h2 class="text-sm text-muted">Patrimônio total</h2>
+                <p class="mt-3 text-3xl font-semibold tabular-nums">R$ 12.450,00</p>
+                <p class="mt-3 text-sm text-success">+2,4% neste mês</p>
+            </article>
+            <article class="rounded-xl border border-line bg-surface p-6">
+                <h2 class="text-sm text-muted">Dividendos recebidos</h2>
+                <p class="mt-3 text-3xl font-semibold tabular-nums">R$ 184,90</p>
+                <p class="mt-3 text-sm text-muted">Acumulado do mês</p>
+            </article>
+            <article class="rounded-xl border border-line bg-surface p-6">
+                <h2 class="text-sm text-muted">Variação do dia</h2>
+                <p class="mt-3 text-3xl font-semibold tabular-nums text-danger">−R$ 32,50</p>
+                <p class="mt-3 text-sm text-danger">−0,26% hoje</p>
+            </article>
+        </section>
+
+        <section class="mt-6 rounded-xl border border-line bg-surface p-6" aria-labelledby="preview-title">
+            <h2 id="preview-title" class="text-lg font-semibold">Componentes em contexto</h2>
+            <label for="wallet-name" class="mt-5 block text-sm font-medium">Nome da carteira</label>
+            <input id="wallet-name" value="Minha carteira" readonly
+                   class="mt-2 w-full max-w-sm rounded-lg border border-line bg-page px-4 py-3 text-ink focus:border-link focus:outline-2 focus:outline-link" />
+            <p class="mt-4 rounded-lg bg-warning/10 p-4 text-sm text-warning">
+                Atenção: esta página usa dados ilustrativos e não está conectada à API.
+            </p>
+            <a href="#colors" class="mt-4 inline-block text-sm font-medium text-link underline underline-offset-4">Consultar os códigos da paleta</a>
+        </section>
+
+        <section id="colors" class="mt-10" aria-labelledby="colors-title">
+            <h2 id="colors-title" class="text-xl font-semibold">Paleta do projeto</h2>
+            <p class="mt-2 text-sm text-muted">Os nomes abaixo podem ser usados em classes bg-*, text-* e border-*.</p>
+            <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                @foreach (var color in colors)
+                {
+                    <article class="overflow-hidden rounded-lg border border-line bg-surface">
+                        <div class="h-16 border-b border-line" style="@($"background-color: var(--color-{color.Name})")"></div>
+                        <div class="p-3">
+                            <p class="text-sm font-semibold">@color.Name</p>
+                            <p class="mt-1 font-mono text-xs text-muted">@color.Hex</p>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+    </main>
+</div>
+
+@code {
+    private string? demoMessage;
+
+    private void ShowDemoMessage()
+        => demoMessage = "Botão de demonstração: nenhuma operação foi registrada.";
+
+    private readonly (string Name, string Hex)[] colors =
+    [
+        ("page", "#F8FAFC"), ("surface", "#FFFFFF"), ("sidebar", "#0F172A"),
+        ("ink", "#0F172A"), ("muted", "#475569"), ("line", "#E2E8F0"),
+        ("primary", "#047857"), ("primary-hover", "#065F46"), ("link", "#1D4ED8"),
+        ("success", "#15803D"), ("danger", "#B91C1C"), ("warning", "#B45309")
+    ];
+}
