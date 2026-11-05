@@ -1,0 +1,19 @@
+@inject IConfiguration Configuration
+
+<section class="rounded-xl border border-line bg-surface p-6 sm:p-8" role="alert">
+    <h1 class="text-xl font-semibold">@Title</h1>
+    <p class="mt-2 max-w-prose text-sm text-muted wrap-anywhere">
+        Verifique se a API está rodando em
+        <code class="rounded bg-page px-1.5 py-0.5 font-mono text-xs">@Configuration["Api:BaseUrl"]</code>
+        e tente novamente.
+    </p>
+    <button type="button" @onclick="OnRetry"
+            class="hover:cursor-pointer mt-6 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-surface transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+        Tentar novamente
+    </button>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter, EditorRequired] public EventCallback OnRetry { get; set; }
+}

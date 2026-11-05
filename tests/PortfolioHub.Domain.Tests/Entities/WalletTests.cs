@@ -252,6 +252,38 @@ public class WalletTests
 
     [TestMethod]
     [TestCategory("Wallet Tests")]
+    public void Should_Return_Only_Assets_With_Positive_Quantity_In_GetHeldAssets()
+    {
+        _wallet.BuyAsset(_xpml11, 5, 105m);
+        _wallet.BuyAsset(_btci11, 10, 9m);
+        _wallet.SellAsset(_btci11, 10, 9.5m);
+
+        var heldAssets = _wallet.GetHeldAssets();
+
+        Assert.HasCount(1, heldAssets);
+        Assert.AreEqual(_xpml11.Id, heldAssets.Single().Id);
+    }
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Return_Sum_Of_Quantity_Times_MarketPrice_In_GetNetWorth()
+    {
+        _wallet.BuyAsset(_xpml11, 5, 100m);
+        _wallet.BuyAsset(_btci11, 10, 8m);
+        _wallet.SellAsset(_btci11, 4, 9m);
+
+        Money expected = (5 * 105.0m) + (6 * 9.1m);
+
+        Assert.AreEqual(expected, _wallet.GetNetWorth());
+    }
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Return_Zero_NetWorth_When_Wallet_Is_Empty()
+        => Assert.AreEqual(new Money(0), _wallet.GetNetWorth());
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
     public void Should_Return_Exception_And_Not_Register_When_Buying_Zero_Quantity()
     {
         Assert.Throws<InvalidQuantityException>(() => _wallet.BuyAsset(_xpml11, 0, 105m));

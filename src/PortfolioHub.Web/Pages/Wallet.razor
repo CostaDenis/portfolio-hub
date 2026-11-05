@@ -1,0 +1,311 @@
+@page "/carteiras/{WalletId:guid}"
+@inject PortfolioApiClient Api
+@implements IDisposable
+
+<PageTitle>@(wallet?.Name ?? "Carteira") | PortfolioHub</PageTitle>
+
+<a href=""
+   class="mb-6 inline-flex items-center gap-1 rounded text-sm font-medium text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-link">
+    <span aria-hidden="true">←</span> Carteiras
+</a>
+
+@switch (state)
+{
+    case LoadState.WalletNotFound:
+        <section class="rounded-xl border border-line bg-surface p-6 sm:p-8">
+            <h1 class="text-xl font-semibold">Carteira não encontrada</h1>
+            <p class="mt-2 text-sm text-muted">Ela pode ter sido removida ou o endereço está incorreto.</p>
+            <a href="" class="mt-6 inline-block text-sm font-medium text-link underline underline-offset-4">Ver todas as
+                carteiras</a>
+            </section>
+            break;
+
+    case LoadState.Error:
+                <ApiErrorNotice Title="Não foi possível carregar a carteira" OnRetry="LoadAsync" />
+                break;
+
+            case LoadState.Loading:
+                <div class="animate-pulse" role="status" aria-label="Carregando carteira">
+                    <div class="h-4 w-32 rounded bg-line"></div>
+                    <div class="mt-3 h-8 w-56 rounded bg-line"></div>
+                    <div class="mt-8 grid gap-4 md:grid-cols-3">
+                        @for (var i = 0; i < 3; i++)
+                        {
+                            <div class="h-36 rounded-xl border border-line bg-surface"></div>
+                        }
+                    </div>
+                    <div class="mt-6 h-40 rounded-xl border border-line bg-surface"></div>
+                    <div class="mt-6 h-72 rounded-xl border border-line bg-surface"></div>
+                </div>
+                break;
+
+            case LoadState.Loaded:
+                <header class="mb-8">
+                    <p class="text-xs font-semibold uppercase tracking-widest text-muted">Carteira</p>
+                    <h1 class="mt-2 text-3xl font-semibold tracking-tight">@wallet!.Name</h1>
+                </header>
+
+                <section aria-label="Resumo da carteira" class="grid gap-4 md:grid-cols-3">
+                    <StatCard Title="Patrimônio atual" Value="@NetWorth.ToString("C")">
+                        <Detail>@AssetCountLabel</Detail>
+                    </StatCard>
+
+                    <StatCard Title="Resultado" Value="@FormatSigned(Result)"
+                              ValueClass="@(Result >= 0 ? "text-success" : "text-danger")">
+                        <Detail>Sobre @NetInvested.ToString("C") investidos (compras − vendas)</Detail>
+                    </StatCard>
+
+                    <StatCard Title="Dividendos recebidos" Value="@dividends.TotalReceived.ToString("C")">
+                        <Detail>@DividendCountLabel</Detail>
+                    </StatCard>
+                </section>
+
+                @if (positions.Count == 0)
+                {
+                    <section class="mt-6 rounded-xl border border-dashed border-line bg-surface p-10 text-center">
+                        <h2 class="text-lg font-semibold">Sua carteira ainda está vazia</h2>
+                        <p class="mt-2 text-sm text-muted">Quando você registrar uma compra, as posições e a distribuição aparecem aqui.</p>
+                    </section>
+                }
+                else
+                {
+                    <div class="mt-6">
+                        <AllocationBar Slices="allocation" />
+                    </div>
+
+                    <section class="mt-6 rounded-xl border border-line bg-surface" aria-labelledby="positions-title">
+                        <h2 id="positions-title" class="px-6 pt-6 text-lg font-semibold">Posições</h2>
+
+                        <div class="mt-4 overflow-x-auto">
+                            <table class="w-full min-w-160 text-sm">
+                                <thead>
+                                    <tr class="border-b border-line text-left text-xs uppercase tracking-wider text-muted">
+                                        <th scope="col" class="px-6 py-3 font-medium">Ativo</th>
+                                        <th scope="col" class="px-3 py-3 font-medium">Classe</th>
+                                        <th scope="col" class="px-3 py-3 text-right font-medium">Quantidade</th>
+                                        <th scope="col" class="px-3 py-3 text-right font-medium">Preço atual</th>
+                                        <th scope="col" class="px-3 py-3 text-right font-medium">Valor</th>
+                                        <th scope="col" class="px-6 py-3 text-right font-medium">% da carteira</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var position in positions)
+                                    {
+                                        var assetClass = ClassOf(position.AssetId);
+                                        var share = NetWorth == 0 ? 0 : position.Total / NetWorth;
+
+                                        <tr class="border-b border-line last:border-0 hover:bg-page">
+                                            <td class="px-6 py-4">
+                                                <p class="font-semibold">@position.Ticker</p>
+                                                <p class="text-xs text-muted">@position.AssetName</p>
+                                            </td>
+                                            <td class="px-3 py-4">
+                                                <span class="inline-flex items-center gap-2 whitespace-nowrap">
+                                                    <span class="@($"{assetClass.ColorClass} size-2.5 rounded-sm")" aria-hidden="true"></span>
+                                                    @assetClass.Label
+                                                </span>
+                                            </td>
+                                            <td class="px-3 py-4 text-right tabular-nums">@FormatQuantity(position.Quantity)</td>
+                                            <td class="px-3 py-4 text-right tabular-nums">@position.MarketPrice.ToString("C")</td>
+                                            <td class="px-3 py-4 text-right font-medium tabular-nums">@position.Total.ToString("C")</td>
+                                            <td class="px-6 py-4 text-right tabular-nums">@share.ToString("P1")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                }
+
+                <div class="mt-6 grid gap-6 lg:grid-cols-2">
+                    <section class="rounded-xl border border-line bg-surface p-6" aria-labelledby="transactions-title">
+                        <h2 id="transactions-title" class="text-lg font-semibold">Últimas movimentações</h2>
+
+                        @if (transactions.Count == 0)
+                        {
+                            <p class="mt-4 text-sm text-muted">Nenhuma compra ou venda registrada.</p>
+                        }
+                        else
+                        {
+                            <ul class="mt-4 divide-y divide-line">
+                                @foreach (var transaction in transactions.OrderByDescending(t => t.Date).Take(RecentItems))
+                                {
+                                    <li class="flex items-center justify-between gap-4 py-3">
+                                        <div class="min-w-0">
+                                            <p class="text-sm">
+                                                <span
+                                                    class="@(transaction.IsBuy ? "bg-primary/10 text-primary" : "bg-link/10 text-link") mr-2 rounded px-1.5 py-0.5 text-xs font-semibold">
+                                                    @(transaction.IsBuy ? "Compra" : "Venda")
+                                                </span>
+                                                <span class="font-semibold">@transaction.Ticker</span>
+                                            </p>
+                                            <p class="mt-1 text-xs text-muted tabular-nums">
+                                                @FormatQuantity(transaction.Quantity) × @transaction.UnitPrice.ToString("C") ·
+                                                @transaction.Date.ToLocalTime().ToString("dd/MM/yyyy")
+                                            </p>
+                                        </div>
+                                        <p class="shrink-0 text-sm font-medium tabular-nums">@transaction.Total.ToString("C")</p>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </section>
+
+                    <section class="rounded-xl border border-line bg-surface p-6" aria-labelledby="dividends-title">
+                        <h2 id="dividends-title" class="text-lg font-semibold">Últimos dividendos</h2>
+
+                        @if (dividends.Dividends.Count == 0)
+                        {
+                            <p class="mt-4 text-sm text-muted">Nenhum dividendo recebido ainda.</p>
+                        }
+                        else
+                        {
+                            <ul class="mt-4 divide-y divide-line">
+                                @foreach (var dividend in dividends.Dividends.OrderByDescending(d => d.Date).Take(RecentItems))
+                                {
+                                    <li class="flex items-center justify-between gap-4 py-3">
+                                        <div class="min-w-0">
+                                            <p class="text-sm font-semibold">@dividend.Ticker</p>
+                                            <p class="mt-1 text-xs text-muted tabular-nums">
+                                                @FormatQuantity(dividend.Quantity) × @dividend.ValuePerShare.ToString("C") ·
+                                                @dividend.Date.ToString("dd/MM/yyyy")
+                                            </p>
+                                        </div>
+                                        <p class="shrink-0 text-sm font-medium text-success tabular-nums">+@dividend.Total.ToString("C")</p>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </section>
+                </div>
+                break;
+            }
+
+@code {
+    private const int RecentItems = 5;
+
+    private enum LoadState { Loading, Loaded, WalletNotFound, Error }
+
+    private static readonly Dictionary<string, AssetClass> AssetClasses = new()
+    {
+        ["Stock"] = new("Ações", "bg-series-1"),
+        ["RealStateFund"] = new("Fundos imobiliários", "bg-series-2"),
+        ["Cryptocurrency"] = new("Criptomoedas", "bg-series-3"),
+    };
+
+    private static readonly AssetClass UnknownClass = new("Outros", "bg-muted");
+
+    [Parameter] public Guid WalletId { get; set; }
+
+    private readonly CancellationTokenSource cts = new();
+
+    private LoadState state = LoadState.Loading;
+
+    private WalletResponse? wallet;
+    private IReadOnlyList<WalletPositionResponse> positions = [];
+    private IReadOnlyList<TransactionResponse> transactions = [];
+    private WalletDividendsResponse dividends = new(0, []);
+    private Dictionary<Guid, string> assetTypes = [];
+    private IReadOnlyList<AllocationBar.AllocationSlice> allocation = [];
+
+    private decimal NetWorth => positions.Sum(p => p.Total);
+    private decimal NetInvested => transactions.Sum(t => t.IsBuy ? t.Total : -t.Total);
+
+    // Patrimônio atual + o que já foi resgatado em vendas − o que foi gasto em compras.
+    private decimal Result => NetWorth - NetInvested;
+
+    private string AssetCountLabel => positions.Count == 1 ? "1 ativo em carteira" : $"{positions.Count} ativos em carteira";
+
+    private string DividendCountLabel => dividends.Dividends.Count switch
+    {
+        0 => "Nenhum pagamento ainda",
+        1 => "1 pagamento",
+        var n => $"{n} pagamentos",
+    };
+
+    // OnParametersSet (e não OnInitialized) para recarregar quando a rota troca de carteira.
+    protected override async Task OnParametersSetAsync()
+        => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        state = LoadState.Loading;
+
+        try
+        {
+            wallet = await Api.GetWalletAsync(WalletId, cts.Token);
+
+            if (wallet is null)
+            {
+                state = LoadState.WalletNotFound;
+                return;
+            }
+
+            var positionsTask = Api.GetPositionsAsync(WalletId, cts.Token);
+            var transactionsTask = Api.GetTransactionsAsync(WalletId, cts.Token);
+            var dividendsTask = Api.GetDividendsAsync(WalletId, cts.Token);
+            var assetsTask = Api.GetAssetsAsync(cts.Token);
+
+            await Task.WhenAll(positionsTask, transactionsTask, dividendsTask, assetsTask);
+
+            positions = positionsTask.Result.OrderByDescending(p => p.Total).ToList();
+            transactions = transactionsTask.Result;
+            dividends = dividendsTask.Result;
+            assetTypes = assetsTask.Result.ToDictionary(a => a.AssetId, a => a.Type);
+            allocation = BuildAllocation();
+
+            state = LoadState.Loaded;
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
+            // Página fechada durante o carregamento.
+        }
+        catch (Exception exception) when (exception is HttpRequestException or System.Text.Json.JsonException)
+        {
+            state = LoadState.Error;
+        }
+    }
+
+    private IReadOnlyList<AllocationBar.AllocationSlice> BuildAllocation()
+    {
+        var total = NetWorth;
+        if (total == 0)
+            return [];
+
+        return positions
+            .GroupBy(p => ClassOf(p.AssetId))
+            .Select(g => (Class: g.Key, Value: g.Sum(p => p.Total)))
+            .OrderBy(g => ClassOrder(g.Class))
+            .Select(g => new AllocationBar.AllocationSlice(g.Class.Label, g.Class.ColorClass, g.Value, g.Value / total))
+            .ToList();
+    }
+
+    private AssetClass ClassOf(Guid assetId)
+        => assetTypes.TryGetValue(assetId, out var type) && AssetClasses.TryGetValue(type, out var assetClass)
+            ? assetClass
+            : UnknownClass;
+
+    private static int ClassOrder(AssetClass assetClass)
+    {
+        var index = AssetClasses.Values.ToList().IndexOf(assetClass);
+        return index < 0 ? int.MaxValue : index;
+    }
+
+    private static string FormatQuantity(decimal quantity) => quantity.ToString("#,##0.########");
+
+    private static string FormatSigned(decimal value)
+        => value switch
+        {
+            > 0 => "+" + value.ToString("C"),
+            < 0 => "−" + Math.Abs(value).ToString("C"),
+            _ => value.ToString("C"),
+        };
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
+
+    private record AssetClass(string Label, string ColorClass);
+}

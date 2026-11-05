@@ -14,6 +14,11 @@
     --color-danger: #B91C1C;
     --color-warning: #B45309;
 
+    /* Cores categóricas para gráficos (classes de ativos), na ordem fixa */
+    --color-series-1: #2A78D6;
+    --color-series-2: #EB6834;
+    --color-series-3: #1BAF7A;
+
     --animate-loading-bar: loading-bar 1.4s ease-in-out infinite alternate;
 
     @keyframes loading-bar {

@@ -244,4 +244,44 @@ public class WalletRepositoryTests : InfrastructureTestBase
         Assert.AreEqual(10m, result.GetCurrentQuantity(_asset).Value);
     }
 
+    [TestMethod]
+    [TestCategory("WalletRepository tests")]
+    public async Task Should_Return_All_Wallets_With_Transactions_And_Assets_Without_Tracking()
+    {
+        var emptyWallet = new Wallet(new WalletName("Reserva"));
+        _wallet.BuyAsset(_asset, 10, 105m);
+
+        await using (var setupContext = CreateDbContext())
+        {
+            setupContext.Assets.Add(_asset);
+            setupContext.Wallets.AddRange(_wallet, emptyWallet);
+            await setupContext.SaveChangesAsync(CancellationToken.None);
+        }
+
+        await using var context = CreateDbContext();
+        var repository = new WalletRepository(context);
+
+        var result = await repository.GetAllAsync(CancellationToken.None);
+        var storedWallet = result.Single(wallet => wallet.Id == _wallet.Id);
+        var storedEmptyWallet = result.Single(wallet => wallet.Id == emptyWallet.Id);
+
+        Assert.HasCount(2, result);
+        Assert.HasCount(1, storedWallet.Transactions);
+        Assert.AreEqual("XPML11", storedWallet.Transactions.Single().Asset.Ticker.Value);
+        Assert.AreEqual(10 * 109m, storedWallet.GetNetWorth().Value);
+        Assert.HasCount(0, storedEmptyWallet.Transactions);
+        Assert.AreEqual(0, context.ChangeTracker.Entries().Count());
+    }
+
+    [TestMethod]
+    [TestCategory("WalletRepository tests")]
+    public async Task Should_Return_Empty_List_When_No_Wallets_Exist()
+    {
+        await using var context = CreateDbContext();
+        var repository = new WalletRepository(context);
+
+        var result = await repository.GetAllAsync(CancellationToken.None);
+
+        Assert.HasCount(0, result);
+    }
 }

@@ -49,6 +49,25 @@ public class Wallet(WalletName name) : Entity
     public bool ContainsAsset(Asset asset)
         => GetCurrentQuantity(asset) > 0;
 
+    // Ativos com quantidade atual maior que zero (exclui os que já foram vendidos por completo).
+    public IReadOnlyCollection<Asset> GetHeldAssets()
+        => _transactions
+            .Select(transaction => transaction.Asset)
+            .DistinctBy(asset => asset.Id)
+            .Where(ContainsAsset)
+            .ToList()
+            .AsReadOnly();
+
+    // Valor atual da carteira: soma de quantidade × preço de mercado de cada ativo.
+    public Money GetNetWorth()
+    {
+        decimal netWorth = 0;
+        foreach (var asset in GetHeldAssets())
+            netWorth += GetCurrentQuantity(asset).Value * asset.MarketPrice.Price.Value;
+
+        return netWorth;
+    }
+
     public IReadOnlyCollection<Transaction> GetTransactions(Asset asset)
         => _transactions.Where(x => x.Asset.Id == asset.Id).ToList().AsReadOnly();
 

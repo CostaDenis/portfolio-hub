@@ -7,7 +7,6 @@ public class InvalidQuantityException(string message) : BaseException(message)
     {
         if (value < 0)
             ThrowIf(true, new InvalidQuantityException("A quantidade não pode ser negativa!"));
-
     }
 
     public static void ThrowIfNotPositive(decimal value, string message)

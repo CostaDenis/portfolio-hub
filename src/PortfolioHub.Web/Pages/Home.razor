@@ -1,11 +1,226 @@
-﻿@page "/"
+@page "/"
+@inject PortfolioApiClient Api
+@inject NavigationManager Navigation
+@implements IDisposable
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Minhas carteiras | PortfolioHub</PageTitle>
 
-<h1>Hello, world!</h1>
+@switch (state)
+{
+    case LoadState.Error:
+        <ApiErrorNotice Title="Não foi possível carregar suas carteiras" OnRetry="LoadAsync" />
+        break;
 
-Welcome to your new app.
+    case LoadState.Loading:
+        <div class="animate-pulse" role="status" aria-label="Carregando carteiras">
+            <div class="h-8 w-56 rounded bg-line"></div>
+            <div class="mt-3 h-4 w-72 rounded bg-line"></div>
+            <div class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                @for (var i = 0; i < 3; i++)
+                {
+                    <div class="h-40 rounded-xl border border-line bg-surface"></div>
+                }
+            </div>
+        </div>
+        break;
 
-<div class="h-full w-full bg-amber-800">
-    Denis
-</div>
+    case LoadState.Loaded:
+        <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-semibold tracking-tight">Minhas carteiras</h1>
+                @if (wallets.Count > 0)
+                {
+                    <p class="mt-2 text-sm text-muted">
+                        Patrimônio total de <span class="font-medium text-ink tabular-nums">@TotalNetWorth.ToString("C")</span>
+                        em @(wallets.Count == 1 ? "1 carteira" : $"{wallets.Count} carteiras")
+                    </p>
+                }
+            </div>
+
+            @if (!showForm)
+            {
+                <button type="button" @onclick="OpenForm"
+                        class="hover:cursor-pointer rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-surface transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+                    + Nova carteira
+                </button>
+            }
+        </header>
+
+        @if (showForm)
+        {
+            <section class="mb-6 rounded-xl border border-line bg-surface p-6" aria-labelledby="new-wallet-title">
+                <h2 id="new-wallet-title" class="text-lg font-semibold">
+                    @(wallets.Count == 0 ? "Crie sua primeira carteira" : "Nova carteira")
+                </h2>
+                <p class="mt-1 text-sm text-muted">Use carteiras para separar seus investimentos, por exemplo: Ações, FIIs ou Aposentadoria.</p>
+
+                <form class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-start" @onsubmit="CreateWalletAsync" @onsubmit:preventDefault>
+                    <div class="w-full sm:max-w-sm">
+                        <label for="wallet-name" class="sr-only">Nome da carteira</label>
+                        <input id="wallet-name" @ref="nameInput" @bind="newWalletName" @bind:event="oninput"
+                               maxlength="20" placeholder="Nome da carteira" autocomplete="off"
+                               aria-invalid="@(createError is not null)" aria-describedby="wallet-name-help"
+                               class="w-full rounded-lg border border-line bg-page px-4 py-3 text-ink placeholder:text-muted focus:border-link focus:outline-2 focus:outline-link aria-invalid:border-danger" />
+                        @if (createError is not null)
+                        {
+                            <p id="wallet-name-help" class="mt-2 text-sm text-danger" role="alert">@createError</p>
+                        }
+                        else
+                        {
+                            <p id="wallet-name-help" class="mt-2 text-xs text-muted">Entre 2 e 20 caracteres.</p>
+                        }
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="submit" disabled="@creating"
+                                class="hover:cursor-pointer rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-surface transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60">
+                            @(creating ? "Criando…" : "Criar carteira")
+                        </button>
+                        @if (wallets.Count > 0)
+                        {
+                            <button type="button" @onclick="CloseForm"
+                                    class="hover:cursor-pointer rounded-lg px-5 py-3 text-sm font-medium text-muted transition-colors hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-link">
+                                Cancelar
+                            </button>
+                        }
+                    </div>
+                </form>
+            </section>
+        }
+
+        @if (wallets.Count > 0)
+        {
+            <ul class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                @foreach (var wallet in wallets)
+                {
+                    var share = TotalNetWorth == 0 ? 0 : wallet.NetWorth / TotalNetWorth;
+
+                    <li>
+                        <a href="@($"carteiras/{wallet.WalletId}")"
+                           class="group block h-full rounded-xl border border-line bg-surface p-6 transition-colors hover:border-primary/40 hover:bg-primary/3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                            <div class="flex items-start justify-between gap-3">
+                                <h2 class="min-w-0 truncate text-lg font-semibold">@wallet.Name</h2>
+                                <span class="shrink-0 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true">→</span>
+                            </div>
+                            <p class="mt-4 text-2xl font-semibold tracking-tight tabular-nums">@wallet.NetWorth.ToString("C")</p>
+                            <p class="mt-2 text-sm text-muted">
+                                @AssetCountLabel(wallet.AssetCount)
+                                @if (wallets.Count > 1 && wallet.NetWorth > 0)
+                                {
+                                    <span class="tabular-nums"> · @share.ToString("P1") do total</span>
+                                }
+                            </p>
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+        break;
+}
+
+@code {
+    private enum LoadState { Loading, Loaded, Error }
+
+    private readonly CancellationTokenSource cts = new();
+
+    private LoadState state = LoadState.Loading;
+    private IReadOnlyList<WalletSummaryResponse> wallets = [];
+
+    private bool showForm;
+    private bool focusInput;
+    private bool creating;
+    private string newWalletName = "";
+    private string? createError;
+    private ElementReference nameInput;
+
+    private decimal TotalNetWorth => wallets.Sum(wallet => wallet.NetWorth);
+
+    protected override async Task OnInitializedAsync()
+        => await LoadAsync();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!focusInput)
+            return;
+
+        focusInput = false;
+        await nameInput.FocusAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        state = LoadState.Loading;
+
+        try
+        {
+            wallets = await Api.GetWalletsAsync(cts.Token);
+            showForm = wallets.Count == 0;
+            state = LoadState.Loaded;
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
+            // Página fechada durante o carregamento.
+        }
+        catch (Exception exception) when (exception is HttpRequestException or System.Text.Json.JsonException)
+        {
+            state = LoadState.Error;
+        }
+    }
+
+    private void OpenForm()
+    {
+        showForm = true;
+        focusInput = true;
+    }
+
+    private void CloseForm()
+    {
+        showForm = false;
+        newWalletName = "";
+        createError = null;
+    }
+
+    private async Task CreateWalletAsync()
+    {
+        if (creating)
+            return;
+
+        creating = true;
+        createError = null;
+
+        try
+        {
+            var result = await Api.CreateWalletAsync(newWalletName.Trim(), cts.Token);
+
+            if (!result.Succeeded)
+            {
+                createError = result.Error;
+                return;
+            }
+
+            // Abre a carteira recém-criada.
+            Navigation.NavigateTo($"carteiras/{result.Value!.WalletId}");
+        }
+        catch (HttpRequestException)
+        {
+            createError = "Não foi possível falar com a API. Tente novamente.";
+        }
+        finally
+        {
+            creating = false;
+        }
+    }
+
+    private static string AssetCountLabel(int count) => count switch
+    {
+        0 => "Nenhum ativo",
+        1 => "1 ativo",
+        _ => $"{count} ativos",
+    };
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
+}

@@ -1,0 +1,15 @@
+<article class="rounded-xl border border-line bg-surface p-6">
+    <h2 class="text-sm text-muted">@Title</h2>
+    <p class="mt-3 text-3xl font-semibold tracking-tight tabular-nums @ValueClass">@Value</p>
+    @if (Detail is not null)
+    {
+        <p class="mt-3 text-sm text-muted">@Detail</p>
+    }
+</article>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter, EditorRequired] public string Value { get; set; } = "";
+    [Parameter] public string? ValueClass { get; set; }
+    [Parameter] public RenderFragment? Detail { get; set; }
+}

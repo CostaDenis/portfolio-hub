@@ -1,16 +1,15 @@
-﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        
-    </div>
+@inherits LayoutComponentBase
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+<div class="min-h-screen bg-page font-sans text-ink lg:grid lg:grid-cols-[240px_1fr]">
+    <aside class="bg-sidebar px-4 py-5 text-surface lg:sticky lg:top-0 lg:h-screen lg:p-8">
+        <a href="" class="inline-block rounded focus-visible:outline-2 focus-visible:outline-offset-4">
+            <span class="text-xl font-bold tracking-tight">PortfolioHub.</span>
+        </a>
+        <p class="mt-1 hidden text-sm text-surface/70 lg:block">Seu patrimônio, com clareza.</p>
+        <NavMenu />
+    </aside>
 
-        <article class="content px-4">
-            @Body
-        </article>
+    <main class="mx-auto w-full max-w-6xl min-w-0 px-4 py-6 sm:px-10 sm:py-10">
+        @Body
     </main>
 </div>

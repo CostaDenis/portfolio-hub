@@ -12,10 +12,15 @@ public class FakeWalletRepository : IWalletRepository
 
     public FakeWalletRepository(Wallet wallet)
     {
-        _wallet = wallet;
+        _wallets.Add(wallet);
     }
 
-    private Wallet? _wallet;
+    public FakeWalletRepository(IEnumerable<Wallet> wallets)
+    {
+        _wallets.AddRange(wallets);
+    }
+
+    private readonly List<Wallet> _wallets = [];
 
     public bool CreateWasCalled { get; private set; }
     public Wallet? CreatedWallet { get; private set; }
@@ -23,15 +28,16 @@ public class FakeWalletRepository : IWalletRepository
     public Wallet? UpdatedWallet { get; private set; }
 
     public Task<Wallet?> GetByIdAsync(Guid walletId, CancellationToken cancellationToken)
-        => Task.FromResult(_wallet?.Id == walletId
-                ? _wallet
-                : null);
+        => Task.FromResult(_wallets.FirstOrDefault(wallet => wallet.Id == walletId));
+
+    public Task<IReadOnlyCollection<Wallet>> GetAllAsync(CancellationToken cancellationToken)
+        => Task.FromResult<IReadOnlyCollection<Wallet>>(_wallets.AsReadOnly());
 
     public Task CreateWalletAsync(Wallet wallet, CancellationToken cancellationToken)
     {
         CreateWasCalled = true;
         CreatedWallet = wallet;
-        _wallet = wallet;
+        _wallets.Add(wallet);
         return Task.CompletedTask;
     }
 
@@ -39,7 +45,8 @@ public class FakeWalletRepository : IWalletRepository
     {
         UpdateWasCalled = true;
         UpdatedWallet = wallet;
-        _wallet = wallet;
+        _wallets.RemoveAll(stored => stored.Id == wallet.Id);
+        _wallets.Add(wallet);
         return Task.CompletedTask;
     }
 }

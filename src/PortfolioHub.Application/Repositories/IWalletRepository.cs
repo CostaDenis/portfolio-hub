@@ -5,6 +5,7 @@ namespace PortfolioHub.Application.Repositories;
 public interface IWalletRepository
 {
     Task<Wallet?> GetByIdAsync(Guid walletId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<Wallet>> GetAllAsync(CancellationToken cancellationToken);
     Task CreateWalletAsync(Wallet wallet, CancellationToken cancellationToken);
     Task UpdateAsync(Wallet wallet, CancellationToken cancellationToken);
 }

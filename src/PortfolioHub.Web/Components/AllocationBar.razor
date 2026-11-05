@@ -1,0 +1,35 @@
+@* Barra empilhada com a distribuição do patrimônio por classe de ativo.
+   A legenda mostra valor e % de cada classe, então a cor nunca é a única informação. *@
+
+<section class="rounded-xl border border-line bg-surface p-6" aria-labelledby="allocation-title">
+    <h2 id="allocation-title" class="text-lg font-semibold">Distribuição por classe</h2>
+
+    <div class="mt-5 flex h-3 w-full gap-0.5" role="img"
+         aria-label="@string.Join(", ", Slices.Select(s => $"{s.Label}: {s.Share:P1}"))">
+        @foreach (var slice in Slices)
+        {
+            <div class="@($"{slice.ColorClass} h-full min-w-1 first:rounded-l last:rounded-r transition-opacity hover:opacity-80")"
+                 style="@($"flex-grow: {slice.Share.ToString(System.Globalization.CultureInfo.InvariantCulture)}")"
+                 title="@($"{slice.Label}: {slice.Value:C} ({slice.Share:P1})")"></div>
+        }
+    </div>
+
+    <ul class="mt-5 grid gap-3 sm:grid-cols-3">
+        @foreach (var slice in Slices)
+        {
+            <li class="flex items-start gap-3">
+                <span class="@($"{slice.ColorClass} mt-1 size-3 shrink-0 rounded-sm")" aria-hidden="true"></span>
+                <div class="min-w-0">
+                    <p class="text-sm font-medium">@slice.Label</p>
+                    <p class="text-sm text-muted tabular-nums">@slice.Value.ToString("C") · @slice.Share.ToString("P1")</p>
+                </div>
+            </li>
+        }
+    </ul>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<AllocationSlice> Slices { get; set; } = [];
+
+    public record AllocationSlice(string Label, string ColorClass, decimal Value, decimal Share);
+}

@@ -16,6 +16,15 @@ public class WalletRepository(AppDbContext context) : IWalletRepository
             .AsSplitQuery()
             .FirstOrDefaultAsync(x => x.Id == walletId, cancellationToken);
 
+    // Carrega as transações e os ativos para calcular patrimônio e posições.
+    public async Task<IReadOnlyCollection<Wallet>> GetAllAsync(CancellationToken cancellationToken)
+        => await context.Wallets
+            .AsNoTracking()
+            .Include(x => x.Transactions)
+                .ThenInclude(x => x.Asset)
+            .AsSplitQuery()
+            .ToListAsync(cancellationToken);
+
     public async Task CreateWalletAsync(Wallet wallet, CancellationToken cancellationToken)
     {
         await context.Wallets.AddAsync(wallet, cancellationToken);

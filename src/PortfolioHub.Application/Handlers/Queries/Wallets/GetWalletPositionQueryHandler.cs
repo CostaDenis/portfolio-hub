@@ -13,22 +13,13 @@ public class GetWalletPositionQueryHandler(WalletFinder walletFinder)
         var wallet = await walletFinder.GetRequiredAsync(query.WalletId, cancellationToken);
         List<WalletPositionDTO> positions = [];
 
-        var assets = wallet.Transactions
-            .Select(transaction => transaction.Asset)
-            .DistinctBy(asset => asset.Id);
-
-        foreach (var asset in assets)
+        foreach (var asset in wallet.GetHeldAssets())
         {
-            var quantity = wallet.GetCurrentQuantity(asset);
-
-            if (quantity == 0)
-                continue;
-
             positions.Add(new WalletPositionDTO(
                 asset.Id,
                 asset.Ticker,
                 asset.Name,
-                quantity,
+                wallet.GetCurrentQuantity(asset),
                 asset.MarketPrice.Price.Value));
         }
 

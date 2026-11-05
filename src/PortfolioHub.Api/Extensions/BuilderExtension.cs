@@ -43,12 +43,28 @@ public static class BuilderExtension
         builder.Services.AddScoped<UpdateWalletNameCommandHandler>();
         builder.Services.AddScoped<GetWalletAssetPositionQueryHandler>();
         builder.Services.AddScoped<GetWalletByIdQueryHandler>();
+        builder.Services.AddScoped<GetWalletsQueryHandler>();
         builder.Services.AddScoped<GetWalletDividendsQueryHandler>();
         builder.Services.AddScoped<GetWalletPositionQueryHandler>();
         builder.Services.AddScoped<GetWalletTransactionsQueryHandler>();
 
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
+    }
+
+    public const string WebCorsPolicy = "PortfolioHubWeb";
+
+    public static void AddCrossOrigin(this WebApplicationBuilder builder)
+    {
+        var allowedOrigins = builder.Configuration
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>() ?? [];
+
+        builder.Services.AddCors(options =>
+            options.AddPolicy(WebCorsPolicy, policy => policy
+                .WithOrigins(allowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod()));
     }
 
     public static void AddHttpJsonOptions(this WebApplicationBuilder builder)
