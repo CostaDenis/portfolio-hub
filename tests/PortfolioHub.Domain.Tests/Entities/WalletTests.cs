@@ -250,4 +250,22 @@ public class WalletTests
         Assert.AreEqual(correctResult, _wallet.GetTotalDividendsByAsset(_xpml11));
     }
 
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Return_Exception_And_Not_Register_When_Buying_Zero_Quantity()
+    {
+        Assert.Throws<InvalidQuantityException>(() => _wallet.BuyAsset(_xpml11, 0, 105m));
+        Assert.IsEmpty(_wallet.Transactions);
+    }
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Return_Exception_And_Not_Register_When_Selling_Zero_Quantity()
+    {
+        _wallet.BuyAsset(_xpml11, 2, 105m);
+
+        Assert.Throws<InvalidQuantityException>(() => _wallet.SellAsset(_xpml11, 0, 110m));
+        Assert.HasCount(1, _wallet.Transactions);
+    }
+
 }

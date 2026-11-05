@@ -1,6 +1,7 @@
 using PortfolioHub.Domain.Entities;
 using PortfolioHub.Domain.Enums;
 using PortfolioHub.Domain.Exceptions;
+using PortfolioHub.Domain.Exceptions.ValueObjects;
 using PortfolioHub.Domain.ValueObjects;
 
 namespace PortfolioHub.Domain.Tests.Entities;
@@ -40,6 +41,24 @@ public class TransactionTests
             -330000.0m
         ));
     }
+
+    [TestMethod]
+    [TestCategory("Transaction Tests")]
+    public void Should_Return_Exception_When_UnitPrice_Is_Zero()
+        => Assert.Throws<InvalidPriceException>(() => new Transaction(
+            _validTransaction.Asset, ETransactionType.Buy, 1, 0m));
+
+    [TestMethod]
+    [TestCategory("Transaction Tests")]
+    public void Should_Return_Exception_When_Quantity_Is_Zero()
+        => Assert.Throws<InvalidQuantityException>(() => new Transaction(
+            _validTransaction.Asset, ETransactionType.Buy, 0, 330000.0m));
+
+    [TestMethod]
+    [TestCategory("Transaction Tests")]
+    public void Should_Return_Exception_When_Selling_Zero_Quantity()
+        => Assert.Throws<InvalidQuantityException>(() => new Transaction(
+            _validTransaction.Asset, ETransactionType.Sell, 0, 330000.0m));
 
     [TestMethod]
     [TestCategory("Transaction Tests")]

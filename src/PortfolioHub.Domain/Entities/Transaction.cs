@@ -1,5 +1,6 @@
 ﻿using PortfolioHub.Domain.Enums;
 using PortfolioHub.Domain.Exceptions;
+using PortfolioHub.Domain.Exceptions.ValueObjects;
 using PortfolioHub.Domain.ValueObjects;
 
 namespace PortfolioHub.Domain.Entities;
@@ -17,7 +18,11 @@ public class Transaction : Entity
     public Transaction(Asset asset, ETransactionType type,
     Quantity quantity, Money unitPrice)
     {
-        InvalidPriceException.ThrowIfInvalid(unitPrice);
+        InvalidQuantityException.ThrowIfNotPositive(quantity,
+            "A quantidade da transação deve ser maior que zero!");
+
+        InvalidPriceException.ThrowIfNotPositive(unitPrice,
+            "O preço unitário deve ser maior que zero!");
 
         Asset = asset;
         Type = type;

@@ -17,14 +17,11 @@ public class Dividend : Entity
     public Dividend(Asset asset, Quantity quantity,
         Money valuePerShare, DateTime date)
     {
+        InvalidQuantityException.ThrowIfNotPositive(quantity,
+            "Deve ter pelo menos uma unidade para receber dividendo!");
 
-        if (quantity == 0)
-            throw new InvalidQuantityException("Deve ter pelo menos uma unidade para receber dividendo!");
-
-        if (valuePerShare == 0)
-            throw new InvalidPriceException("O valor do dividendo deve ser positivo!");
-
-        InvalidPriceException.ThrowIfInvalid(valuePerShare);
+        InvalidPriceException.ThrowIfNotPositive(valuePerShare,
+            "O valor do dividendo deve ser positivo!");
 
         Asset = asset;
         Quantity = quantity;
