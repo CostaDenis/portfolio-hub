@@ -55,7 +55,8 @@ public class FakeAssetRepository : IAssetRepository
         return Task.CompletedTask;
     }
 
-    public async Task<bool> ExistsByTickerAsync(Ticker ticker, CancellationToken cancellationToken)
+    public async Task<bool> ExistsByTickerAsync(Ticker ticker, Guid? excludedId, CancellationToken cancellationToken)
         => await Task.FromResult(
-        _assets.Any(asset => asset.Ticker.Equals(ticker)));
+            _assets.Any(asset => asset.Ticker.Equals(ticker)
+                && asset.Id != excludedId));
 }

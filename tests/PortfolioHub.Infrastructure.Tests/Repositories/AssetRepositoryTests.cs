@@ -125,4 +125,78 @@ public class AssetRepositoryTests : InfrastructureTestBase
         Assert.AreEqual(120.87654321m, result.MarketPrice.Price.Value);
         Assert.AreEqual(updatedPrice.LastUpdate, result.MarketPrice.LastUpdate);
     }
+
+    [TestMethod]
+    [TestCategory("AssetRepository tests")]
+    public async Task Should_Return_True_When_Ticker_Exists_And_No_Id_Is_Excluded()
+    {
+        await SeedAssetAsync();
+
+        await using var context = CreateDbContext();
+        var repository = new AssetRepository(context);
+
+        var result = await repository.ExistsByTickerAsync(
+            new Ticker("xpml11"), null, CancellationToken.None);
+
+        Assert.IsTrue(result);
+    }
+
+    [TestMethod]
+    [TestCategory("AssetRepository tests")]
+    public async Task Should_Return_False_When_Ticker_Does_Not_Exist()
+    {
+        await SeedAssetAsync();
+
+        await using var context = CreateDbContext();
+        var repository = new AssetRepository(context);
+
+        var result = await repository.ExistsByTickerAsync(
+            new Ticker("BTC"), null, CancellationToken.None);
+
+        Assert.IsFalse(result);
+    }
+
+    [TestMethod]
+    [TestCategory("AssetRepository tests")]
+    public async Task Should_Return_False_When_Ticker_Belongs_Only_To_Excluded_Asset()
+    {
+        await SeedAssetAsync();
+
+        await using var context = CreateDbContext();
+        var repository = new AssetRepository(context);
+
+        var result = await repository.ExistsByTickerAsync(
+            new Ticker("XPML11"), _asset.Id, CancellationToken.None);
+
+        Assert.IsFalse(result);
+    }
+
+    [TestMethod]
+    [TestCategory("AssetRepository tests")]
+    public async Task Should_Return_True_When_Ticker_Belongs_To_Another_Asset()
+    {
+        var bitcoin = new Asset(new AssetName("Bitcoin"), new Ticker("BTC"),
+            EAssetType.Cryptocurrency, new MarketPrice(new Money(350000m)));
+
+        await using (var setupContext = CreateDbContext())
+        {
+            setupContext.Assets.AddRange(_asset, bitcoin);
+            await setupContext.SaveChangesAsync(CancellationToken.None);
+        }
+
+        await using var context = CreateDbContext();
+        var repository = new AssetRepository(context);
+
+        var result = await repository.ExistsByTickerAsync(
+            new Ticker("XPML11"), bitcoin.Id, CancellationToken.None);
+
+        Assert.IsTrue(result);
+    }
+
+    private async Task SeedAssetAsync()
+    {
+        await using var setupContext = CreateDbContext();
+        setupContext.Assets.Add(_asset);
+        await setupContext.SaveChangesAsync(CancellationToken.None);
+    }
 }

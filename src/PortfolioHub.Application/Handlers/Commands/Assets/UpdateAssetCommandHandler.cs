@@ -10,7 +10,7 @@ public class UpdateAssetCommandHandler(IAssetRepository assetRepository, AssetFi
     public async Task HandleAsync(UpdateAssetCommand command, CancellationToken cancellationToken)
     {
         var tickerAlreadyRegistred = await assetRepository
-            .ExistsByTickerAsync(command.Ticker, cancellationToken);
+            .ExistsByTickerAsync(command.Ticker, command.AssetId, cancellationToken);
 
         if (tickerAlreadyRegistred)
             throw new TickerAlreadyUsedException();
