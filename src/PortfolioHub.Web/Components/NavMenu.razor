@@ -2,22 +2,27 @@
 @implements IDisposable
 
 <nav aria-label="Navegação principal" class="mt-4 flex gap-2 lg:mt-8 lg:flex-col">
-    <a href="" aria-current="@(IsWalletsSection ? "page" : null)"
-       class="@($"rounded-lg px-4 py-2.5 text-sm font-medium transition-colors hover:bg-surface/10 focus-visible:outline-2 focus-visible:outline-offset-4 {(IsWalletsSection ? "bg-surface/10 text-surface" : "text-surface/80")}")">
+    <a href="" aria-current="@(IsWalletsSection ? "page" : null)" class="@LinkClass(IsWalletsSection)">
         Carteiras
+    </a>
+    <a href="ativos" aria-current="@(IsAssetsSection ? "page" : null)" class="@LinkClass(IsAssetsSection)">
+        Ativos
     </a>
 </nav>
 
 @code {
+    private string CurrentPath => Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0];
+
     // "Carteiras" fica ativo na lista (/) e dentro de qualquer carteira (/carteiras/{id}).
     private bool IsWalletsSection
-    {
-        get
-        {
-            var path = Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0];
-            return path.Length == 0 || path.StartsWith("carteiras", StringComparison.OrdinalIgnoreCase);
-        }
-    }
+        => CurrentPath.Length == 0 || CurrentPath.StartsWith("carteiras", StringComparison.OrdinalIgnoreCase);
+
+    private bool IsAssetsSection
+        => CurrentPath.StartsWith("ativos", StringComparison.OrdinalIgnoreCase);
+
+    private static string LinkClass(bool active)
+        => "rounded-lg px-4 py-2.5 text-sm font-medium transition-colors hover:bg-surface/10 focus-visible:outline-2 focus-visible:outline-offset-4 "
+           + (active ? "bg-surface/10 text-surface" : "text-surface/80");
 
     protected override void OnInitialized()
         => Navigation.LocationChanged += OnLocationChanged;

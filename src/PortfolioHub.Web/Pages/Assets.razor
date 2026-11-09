@@ -1,0 +1,250 @@
+@page "/ativos"
+@inherits AssetsPage
+
+<PageTitle>Ativos | PortfolioHub</PageTitle>
+
+<header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <h1 class="text-3xl font-semibold tracking-tight">Ativos</h1>
+        <p class="mt-2 text-sm text-muted">Ativos cadastrados e seus preços de mercado.</p>
+    </div>
+
+    @if (state == LoadState.Loaded && formMode == FormMode.Closed)
+    {
+        <button type="button" @onclick="OpenCreateForm"
+                class="hover:cursor-pointer rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-surface transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+            + Novo ativo
+        </button>
+    }
+</header>
+
+@switch (state)
+{
+    case LoadState.Error:
+        <ApiErrorNotice Title="Não foi possível carregar os ativos" OnRetry="LoadAsync" />
+        break;
+
+    case LoadState.Loading:
+        <div class="animate-pulse rounded-xl border border-line bg-surface" role="status" aria-label="Carregando ativos">
+            <div class="h-20 border-b border-line"></div>
+            @for (var i = 0; i < 5; i++)
+            {
+                <div class="flex items-center gap-6 border-b border-line px-6 py-5 last:border-0">
+                    <div class="h-4 w-24 rounded bg-line"></div>
+                    <div class="h-4 w-32 rounded bg-line"></div>
+                    <div class="ml-auto h-4 w-20 rounded bg-line"></div>
+                </div>
+            }
+        </div>
+        break;
+
+    case LoadState.Loaded:
+        @if (formMode != FormMode.Closed)
+        {
+            <section class="mb-6 rounded-xl border border-line bg-surface p-6" aria-labelledby="asset-form-title">
+                <h2 id="asset-form-title" class="text-lg font-semibold">
+                    @(formMode == FormMode.Create ? "Novo ativo" : $"Editar {editingTicker}")
+                </h2>
+                @if (formMode == FormMode.Edit)
+                {
+                    <p class="mt-1 text-sm text-muted">O preço de mercado é atualizado separadamente, direto na tabela.</p>
+                }
+
+                <form class="mt-5" @onsubmit="SubmitForm" @onsubmit:preventDefault>
+                    <div class="grid gap-5 sm:grid-cols-2">
+                        <div>
+                            <label for="asset-name" class="block text-sm font-medium">Nome</label>
+                            <input id="asset-name" @bind="formName" maxlength="60" autocomplete="off"
+                                   placeholder="Ex.: Petrobras PN"
+                                   class="mt-2 w-full rounded-lg border border-line bg-page px-4 py-3 text-ink placeholder:text-muted focus:border-link focus:outline-2 focus:outline-link" />
+                            <p class="mt-2 text-xs text-muted">Entre 3 e 60 caracteres.</p>
+                        </div>
+
+                        <div>
+                            <label for="asset-ticker" class="block text-sm font-medium">Ticker</label>
+                            <input id="asset-ticker" @bind="formTicker" maxlength="10" autocomplete="off" placeholder="Ex.: PETR4"
+                                   class="mt-2 w-full rounded-lg border border-line bg-page px-4 py-3 font-mono uppercase text-ink placeholder:font-sans placeholder:normal-case placeholder:text-muted focus:border-link focus:outline-2 focus:outline-link" />
+                            <p class="mt-2 text-xs text-muted">De 2 a 10 caracteres, apenas letras e números.</p>
+                        </div>
+
+                        <div>
+                            <label for="asset-type" class="block text-sm font-medium">Tipo</label>
+                            <select id="asset-type" @bind="formType"
+                                    class="hover:cursor-pointer mt-2 w-full rounded-lg border border-line bg-page px-4 py-3 text-ink focus:border-link focus:outline-2 focus:outline-link">
+                                @foreach (var option in AssetTypes)
+                                {
+                                    <option value="@option.Value">@option.Label</option>
+                                }
+                            </select>
+                        </div>
+
+                        @if (formMode == FormMode.Create)
+                        {
+                            <div>
+                                <label for="asset-price" class="block text-sm font-medium">Preço de mercado</label>
+                                <div class="relative mt-2">
+                                    <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-sm text-muted"
+                                          aria-hidden="true">R$</span>
+                                    <input id="asset-price" type="number" @bind="formPrice" min="0" step="any" inputmode="decimal"
+                                           placeholder="0,00"
+                                           class="w-full rounded-lg border border-line bg-page py-3 pr-4 pl-11 text-ink tabular-nums placeholder:text-muted focus:border-link focus:outline-2 focus:outline-link" />
+                                </div>
+                                <p class="mt-2 text-xs text-muted">Não pode ser negativo.</p>
+                            </div>
+                        }
+                    </div>
+
+                    @if (formError is not null)
+                    {
+                        <p class="mt-5 rounded-lg bg-danger/10 px-4 py-3 text-sm text-danger" role="alert">@formError</p>
+                    }
+
+                    <div class="mt-6 flex flex-wrap gap-3">
+                        <button type="submit" disabled="@saving"
+                                class="hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-surface transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+                            @(saving ? "Salvando…" : formMode == FormMode.Create ? "Cadastrar ativo" : "Salvar alterações")
+                        </button>
+                        <button type="button" @onclick="CloseForm"
+                                class="hover:cursor-pointer rounded-lg px-5 py-3 text-sm font-medium text-muted transition-colors hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-link">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </section>
+        }
+
+        <p role="status"
+           class="@(statusMessage is null ? "sr-only" : "mb-4 rounded-lg bg-success/10 px-4 py-3 text-sm text-success")">
+            @statusMessage</p>
+
+            <section class="rounded-xl border border-line bg-surface" aria-labelledby="assets-title">
+                <div class="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
+                    <h2 id="assets-title" class="text-lg font-semibold">
+                        Lista de ativos
+                        <span class="ml-1 text-sm font-normal text-muted tabular-nums">(@FilteredAssets.Count)</span>
+                    </h2>
+
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <div class="flex flex-wrap gap-2" role="group" aria-label="Filtrar por tipo">
+                            <button type="button" @onclick="() => SetTypeFilter(null)" aria-pressed="@AriaBool(typeFilter is null)"
+                                    class="@ChipClass(typeFilter is null)">
+                                Todos <span class="tabular-nums opacity-70">@CountByType(null)</span>
+                            </button>
+                            @foreach (var option in AssetTypes)
+                            {
+                                <button type="button" @onclick="() => SetTypeFilter(option.Value)"
+                                        aria-pressed="@AriaBool(typeFilter == option.Value)" class="@ChipClass(typeFilter == option.Value)">
+                                    <span class="@($"{option.ColorClass} size-2 rounded-sm")" aria-hidden="true"></span>
+                                    @option.Label <span class="tabular-nums opacity-70">@CountByType(option.Value)</span>
+                                </button>
+                            }
+                        </div>
+
+                        <div class="relative sm:w-56">
+                            <label for="asset-search" class="sr-only">Buscar ativo</label>
+                            <input id="asset-search" type="search" @bind="search" @bind:event="oninput"
+                                   placeholder="Buscar por ticker ou nome"
+                                   class="w-full rounded-lg border border-line bg-page px-4 py-2 text-sm text-ink placeholder:text-muted focus:border-link focus:outline-2 focus:outline-link" />
+                        </div>
+                    </div>
+                </div>
+
+                @if (FilteredAssets.Count == 0)
+                {
+                    <div class="border-t border-line px-6 py-12 text-center">
+                        @if (assets.Count == 0)
+                        {
+                            <p class="font-medium">Nenhum ativo cadastrado ainda</p>
+                            <p class="mt-1 text-sm text-muted">Cadastre um ativo em "+ Novo ativo" para usá-lo nas suas carteiras.</p>
+                        }
+                        else
+                        {
+                            <p class="font-medium">Nenhum ativo encontrado</p>
+                            <p class="mt-1 text-sm text-muted">Tente outro termo de busca ou remova o filtro de tipo.</p>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="relative overflow-x-auto">
+                        <table class="w-full min-w-160 text-sm">
+                            <thead>
+                                <tr class="border-y border-line text-left text-xs uppercase tracking-wider text-muted">
+                                    <th scope="col" class="px-6 py-3 font-medium">Ativo</th>
+                                    <th scope="col" class="px-3 py-3 font-medium">Tipo</th>
+                                    <th scope="col" class="px-3 py-3 text-right font-medium">Preço de mercado</th>
+                                    <th scope="col" class="px-6 py-3 text-right font-medium"><span class="sr-only">Ações</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var asset in FilteredAssets)
+                                {
+                                    var type = TypeOf(asset.Type);
+                                    var isEditingPrice = editingPriceAssetId == asset.AssetId;
+
+                                    <tr class="border-b border-line last:border-0 hover:bg-page">
+                                        <td class="px-6 py-4">
+                                            <p class="font-semibold">@asset.Ticker</p>
+                                            <p class="text-xs text-muted">@asset.Name</p>
+                                        </td>
+                                        <td class="px-3 py-4">
+                                            <span class="inline-flex items-center gap-2 whitespace-nowrap">
+                                                <span class="@($"{type.ColorClass} size-2.5 rounded-sm")" aria-hidden="true"></span>
+                                                @type.Label
+                                            </span>
+                                        </td>
+
+                                        @if (isEditingPrice)
+                                        {
+                                            <td class="px-3 py-3 text-right" colspan="2">
+                                                <form class="flex items-center justify-end gap-2" @onsubmit="SavePrice"
+                                                      @onsubmit:preventDefault>
+                                                    <label for="price-@asset.AssetId" class="sr-only">Novo preço de @asset.Ticker</label>
+                                                    <div class="relative w-40">
+                                                        <span
+                                                        class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted"
+                                                        aria-hidden="true">R$</span>
+                                                        <input id="price-@asset.AssetId" type="number" @bind="priceDraft" min="0" step="any"
+                                                               inputmode="decimal"
+                                                               class="w-full rounded-lg border border-link bg-surface py-2 pr-3 pl-9 text-right text-sm tabular-nums focus:outline-2 focus:outline-link" />
+                                                    </div>
+                                                    <button type="submit" disabled="@savingPrice"
+                                                            class="hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-surface transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                                                        @(savingPrice ? "Salvando…" : "Salvar")
+                                                    </button>
+                                                    <button type="button" @onclick="CancelPriceEdit"
+                                                            class="hover:cursor-pointer rounded-lg px-3 py-2 text-xs font-medium text-muted transition-colors hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link">
+                                                        Cancelar
+                                                    </button>
+                                                </form>
+                                                @if (priceError is not null)
+                                                {
+                                                    <p class="mt-2 text-xs text-danger" role="alert">@priceError</p>
+                                                }
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td class="px-3 py-4 text-right font-medium tabular-nums">@FormatPrice(asset.Price)</td>
+                                            <td class="px-6 py-4">
+                                                <div class="flex justify-end gap-1">
+                                                    <button type="button" @onclick="() => StartPriceEdit(asset)"
+                                                            class="hover:cursor-pointer whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-link transition-colors hover:bg-link/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link">
+                                                        Atualizar preço
+                                                    </button>
+                                                    <button type="button" @onclick="() => OpenEditForm(asset)"
+                                                            class="hover:cursor-pointer rounded-lg px-3 py-2 text-xs font-medium text-muted transition-colors hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link">
+                                                        Editar
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+            break;
+        }

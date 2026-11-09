@@ -11,6 +11,12 @@ public record CreateWalletRequest(string Name);
 
 public record AssetResponse(Guid AssetId, string Name, string Ticker, string Type, decimal Price);
 
+public record CreateAssetRequest(string AssetName, string Ticker, string Type, decimal MarketPrice);
+
+public record UpdateAssetRequest(string AssetName, string Ticker, string Type);
+
+public record UpdateMarketPriceRequest(decimal Price);
+
 public record WalletPositionResponse(
     Guid AssetId, string AssetName, string Ticker, decimal Quantity, decimal MarketPrice)
 {

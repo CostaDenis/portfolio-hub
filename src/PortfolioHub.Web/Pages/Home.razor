@@ -57,7 +57,7 @@
                         <label for="wallet-name" class="sr-only">Nome da carteira</label>
                         <input id="wallet-name" @ref="nameInput" @bind="newWalletName" @bind:event="oninput"
                                maxlength="20" placeholder="Nome da carteira" autocomplete="off"
-                               aria-invalid="@(createError is not null)" aria-describedby="wallet-name-help"
+                               aria-invalid="@(createError is not null ? "true" : "false")" aria-describedby="wallet-name-help"
                                class="w-full rounded-lg border border-line bg-page px-4 py-3 text-ink placeholder:text-muted focus:border-link focus:outline-2 focus:outline-link aria-invalid:border-danger" />
                         @if (createError is not null)
                         {
