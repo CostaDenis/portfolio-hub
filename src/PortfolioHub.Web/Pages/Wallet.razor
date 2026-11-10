@@ -39,10 +39,154 @@
                 break;
 
             case LoadState.Loaded:
-                <header class="mb-8">
-                    <p class="text-xs font-semibold uppercase tracking-widest text-muted">Carteira</p>
-                    <h1 class="mt-2 text-3xl font-semibold tracking-tight">@wallet!.Name</h1>
+                <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest text-muted">Carteira</p>
+                        <h1 class="mt-2 text-3xl font-semibold tracking-tight">@wallet!.Name</h1>
+                    </div>
+
+                    @if (!operationOpen)
+                    {
+                        <button type="button" @onclick="OpenOperation"
+                                class="hover:cursor-pointer rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-surface transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+                            + Nova operação
+                        </button>
+                    }
                 </header>
+
+                <p role="status" class="@(statusMessage is null ? "sr-only" : "mb-6 rounded-lg bg-success/10 px-4 py-3 text-sm text-success")">@statusMessage</p>
+
+                @if (operationOpen)
+                {
+                    <section class="mb-6 rounded-xl border border-line bg-surface p-6" aria-labelledby="operation-title">
+                        <h2 id="operation-title" class="text-lg font-semibold">Nova operação</h2>
+
+                        <div class="mt-4 inline-flex rounded-lg border border-line bg-page p-1" role="group" aria-label="Tipo de operação">
+                            @foreach (var option in OperationTypes)
+                            {
+                                var active = operationType == option.Type;
+                                <button type="button" @onclick="() => SetOperationType(option.Type)" aria-pressed="@AriaBool(active)"
+                                        class="@($"hover:cursor-pointer rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link {(active ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink")}")">
+                                    @option.Label
+                                </button>
+                            }
+                        </div>
+
+                        @if (OperationAssetOptions.Count == 0)
+                        {
+                            <div class="mt-5 rounded-lg border border-dashed border-line p-6 text-center">
+                                @if (operationType == OperationType.Buy)
+                                {
+                                    <p class="font-medium">Nenhum ativo cadastrado</p>
+                                    <p class="mt-1 text-sm text-muted">
+                                        Cadastre o ativo antes de registrar a compra, na página
+                                        <a href="ativos" class="font-medium text-link underline underline-offset-4">Ativos</a>.
+                                    </p>
+                                }
+                                else
+                                {
+                                    <p class="font-medium">Nenhum ativo nesta carteira</p>
+                                    <p class="mt-1 text-sm text-muted">
+                                        @(operationType == OperationType.Sell ? "Só é possível vender" : "Só é possível receber dividendos de")
+                                        ativos que você já comprou nesta carteira.
+                                    </p>
+                                }
+                            </div>
+
+                            <button type="button" @onclick="CloseOperation"
+                                    class="hover:cursor-pointer mt-5 rounded-lg px-5 py-3 text-sm font-medium text-muted transition-colors hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-link">
+                                Cancelar
+                            </button>
+                        }
+                        else
+                        {
+                            <form class="mt-5" @onsubmit="SubmitOperationAsync" @onsubmit:preventDefault novalidate>
+                                <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                                    <div class="sm:col-span-2 lg:col-span-1">
+                                        <label for="operation-asset" class="block text-sm font-medium">Ativo</label>
+                                        <select id="operation-asset" @bind="operationAssetId"
+                                                class="hover:cursor-pointer mt-2 w-full rounded-lg border border-line bg-page px-4 py-3 text-ink focus:border-link focus:outline-2 focus:outline-link">
+                                            <option value="">Selecione um ativo</option>
+                                            @foreach (var option in OperationAssetOptions)
+                                            {
+                                                <option value="@option.AssetId">@option.Label</option>
+                                            }
+                                        </select>
+                                    </div>
+
+                                    @if (operationType == OperationType.Dividend)
+                                    {
+                                        <div>
+                                            <label for="operation-price" class="block text-sm font-medium">Valor por cota</label>
+                                            <div class="relative mt-2">
+                                                <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-sm text-muted" aria-hidden="true">R$</span>
+                                                <input id="operation-price" type="number" @bind="operationPrice" @bind:event="oninput" min="0" step="any" inputmode="decimal" placeholder="0,00"
+                                                       class="w-full rounded-lg border border-line bg-page py-3 pr-4 pl-11 text-ink tabular-nums placeholder:text-muted focus:border-link focus:outline-2 focus:outline-link" />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label for="operation-date" class="block text-sm font-medium">Data do pagamento</label>
+                                            <input id="operation-date" type="date" @bind="operationDate"
+                                                   class="mt-2 w-full rounded-lg border border-line bg-page px-4 py-3 text-ink focus:border-link focus:outline-2 focus:outline-link" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div>
+                                            <label for="operation-quantity" class="block text-sm font-medium">Quantidade</label>
+                                            <input id="operation-quantity" type="number" @bind="operationQuantity" @bind:event="oninput" min="0" step="any" inputmode="decimal" placeholder="0"
+                                                   class="mt-2 w-full rounded-lg border border-line bg-page px-4 py-3 text-ink tabular-nums placeholder:text-muted focus:border-link focus:outline-2 focus:outline-link" />
+                                            @if (operationType == OperationType.Sell && operationAssetId is not null)
+                                            {
+                                                <p class="mt-2 text-xs text-muted">Disponível: <span class="tabular-nums">@FormatQuantity(HeldQuantity)</span></p>
+                                            }
+                                        </div>
+
+                                        <div>
+                                            <label for="operation-price" class="block text-sm font-medium">Preço unitário</label>
+                                            <div class="relative mt-2">
+                                                <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-sm text-muted" aria-hidden="true">R$</span>
+                                                <input id="operation-price" type="number" @bind="operationPrice" @bind:event="oninput" min="0" step="any" inputmode="decimal" placeholder="0,00"
+                                                       class="w-full rounded-lg border border-line bg-page py-3 pr-4 pl-11 text-ink tabular-nums placeholder:text-muted focus:border-link focus:outline-2 focus:outline-link" />
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+
+                                <p class="mt-5 text-sm text-muted" aria-live="polite">
+                                    @if (OperationTotal is { } total)
+                                    {
+                                        @(operationType == OperationType.Dividend
+                                            ? $"Total a receber ({FormatQuantity(HeldQuantity)} cotas): "
+                                            : "Total da operação: ")
+                                        <span class="font-semibold text-ink tabular-nums">@total.ToString("C")</span>
+                                    }
+                                    else
+                                    {
+                                        @("O total aparece aqui conforme você preenche.")
+                                    }
+                                </p>
+
+                                @if (operationError is not null)
+                                {
+                                    <p class="mt-4 rounded-lg bg-danger/10 px-4 py-3 text-sm text-danger" role="alert">@operationError</p>
+                                }
+
+                                <div class="mt-6 flex flex-wrap gap-3">
+                                    <button type="submit" disabled="@savingOperation"
+                                            class="hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-surface transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+                                        @SubmitLabel
+                                    </button>
+                                    <button type="button" @onclick="CloseOperation"
+                                            class="hover:cursor-pointer rounded-lg px-5 py-3 text-sm font-medium text-muted transition-colors hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-link">
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </form>
+                        }
+                    </section>
+                }
 
                 <section aria-label="Resumo da carteira" class="grid gap-4 md:grid-cols-3">
                     <StatCard Title="Patrimônio atual" Value="@NetWorth.ToString("C")">
@@ -105,7 +249,7 @@
                                                 </span>
                                             </td>
                                             <td class="px-3 py-4 text-right tabular-nums">@FormatQuantity(position.Quantity)</td>
-                                            <td class="px-3 py-4 text-right tabular-nums">@position.MarketPrice.ToString("C")</td>
+                                            <td class="px-3 py-4 text-right tabular-nums">@PriceFormatter.Format(position.MarketPrice)</td>
                                             <td class="px-3 py-4 text-right font-medium tabular-nums">@position.Total.ToString("C")</td>
                                             <td class="px-6 py-4 text-right tabular-nums">@share.ToString("P1")</td>
                                         </tr>
@@ -139,7 +283,7 @@
                                                 <span class="font-semibold">@transaction.Ticker</span>
                                             </p>
                                             <p class="mt-1 text-xs text-muted tabular-nums">
-                                                @FormatQuantity(transaction.Quantity) × @transaction.UnitPrice.ToString("C") ·
+                                                @FormatQuantity(transaction.Quantity) × @PriceFormatter.Format(transaction.UnitPrice) ·
                                                 @transaction.Date.ToLocalTime().ToString("dd/MM/yyyy")
                                             </p>
                                         </div>
@@ -166,7 +310,7 @@
                                         <div class="min-w-0">
                                             <p class="text-sm font-semibold">@dividend.Ticker</p>
                                             <p class="mt-1 text-xs text-muted tabular-nums">
-                                                @FormatQuantity(dividend.Quantity) × @dividend.ValuePerShare.ToString("C") ·
+                                                @FormatQuantity(dividend.Quantity) × @PriceFormatter.Format(dividend.ValuePerShare) ·
                                                 @dividend.Date.ToString("dd/MM/yyyy")
                                             </p>
                                         </div>

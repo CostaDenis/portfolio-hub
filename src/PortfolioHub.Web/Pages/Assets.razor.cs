@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Components;
-using PortfolioHub.Web.Models;
+using PortfolioHub.Web.Api.Abstractions;
+using PortfolioHub.Web.Api.Models.Asset.Requests;
+using PortfolioHub.Web.Api.Models.Asset.Responses;
 using PortfolioHub.Web.Services;
 
 namespace PortfolioHub.Web.Pages;
 
 public class AssetsPage : ComponentBase, IDisposable
 {
-    [Inject] private PortfolioApiClient Api { get; set; } = default!;
+    [Inject] private IAssetApiCient Api { get; set; } = default!;
 
     protected enum LoadState { Loading, Loaded, Error }
 
@@ -252,7 +254,7 @@ public class AssetsPage : ComponentBase, IDisposable
            + (active ? "border-ink bg-ink text-surface" : "border-line bg-surface text-muted hover:border-muted hover:text-ink");
 
     protected static string FormatPrice(decimal price)
-        => price < 1 ? price.ToString("C4") : price.ToString("C");
+        => PriceFormatter.Format(price);
 
     public void Dispose()
     {

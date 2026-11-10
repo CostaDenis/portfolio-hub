@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Components;
-using PortfolioHub.Web.Models;
-using PortfolioHub.Web.Services;
+using PortfolioHub.Web.Api.Abstractions;
+using PortfolioHub.Web.Api.Models.Wallet.Requests;
+using PortfolioHub.Web.Api.Models.Wallet.Responses;
 
 namespace PortfolioHub.Web.Pages;
 
 public class HomePage : ComponentBase, IDisposable
 {
-    [Inject] private PortfolioApiClient Api { get; set; } = default!;
+    [Inject] private IWalletApiClient WalletApi { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
 
     protected enum LoadState { Loading, Loaded, Error }
@@ -44,7 +45,7 @@ public class HomePage : ComponentBase, IDisposable
 
         try
         {
-            wallets = await Api.GetWalletsAsync(cts.Token);
+            wallets = await WalletApi.GetWalletsAsync(cts.Token);
             showForm = wallets.Count == 0;
             state = LoadState.Loaded;
         }
@@ -81,7 +82,8 @@ public class HomePage : ComponentBase, IDisposable
 
         try
         {
-            var result = await Api.CreateWalletAsync(newWalletName.Trim(), cts.Token);
+            var result = await WalletApi.CreateWalletAsync
+                (new CreateWalletRequest(newWalletName.Trim()), cts.Token);
 
             if (!result.Succeeded)
             {

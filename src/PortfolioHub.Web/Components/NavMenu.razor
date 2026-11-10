@@ -13,7 +13,6 @@
 @code {
     private string CurrentPath => Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0];
 
-    // "Carteiras" fica ativo na lista (/) e dentro de qualquer carteira (/carteiras/{id}).
     private bool IsWalletsSection
         => CurrentPath.Length == 0 || CurrentPath.StartsWith("carteiras", StringComparison.OrdinalIgnoreCase);
 

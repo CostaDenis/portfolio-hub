@@ -1,19 +1,32 @@
 using Microsoft.AspNetCore.Components;
+using PortfolioHub.Web.Api;
+using PortfolioHub.Web.Api.Abstractions;
+using PortfolioHub.Web.Api.Models.Asset.Responses;
+using PortfolioHub.Web.Api.Models.Wallet.Requests;
+using PortfolioHub.Web.Api.Models.Wallet.Responses;
 using PortfolioHub.Web.Components;
-using PortfolioHub.Web.Models;
-using PortfolioHub.Web.Services;
 
 namespace PortfolioHub.Web.Pages;
 
 public class WalletPage : ComponentBase, IDisposable
 {
-    [Inject] private PortfolioApiClient Api { get; set; } = default!;
+    [Inject] private IWalletApiClient WalletApi { get; set; } = default!;
+    [Inject] private AssetApiClient AssetApi { get; set; } = default!;
 
     [Parameter] public Guid WalletId { get; set; }
 
     protected const int RecentItems = 5;
 
     protected enum LoadState { Loading, Loaded, WalletNotFound, Error }
+
+    protected enum OperationType { Buy, Sell, Dividend }
+
+    protected static readonly IReadOnlyList<(OperationType Type, string Label)> OperationTypes =
+    [
+        (OperationType.Buy, "Compra"),
+        (OperationType.Sell, "Venda"),
+        (OperationType.Dividend, "Dividendo"),
+    ];
 
     protected record AssetClass(string Label, string ColorClass);
 
@@ -36,7 +49,19 @@ public class WalletPage : ComponentBase, IDisposable
     protected WalletDividendsResponse dividends = new(0, []);
     protected IReadOnlyList<AllocationBar.AllocationSlice> allocation = [];
 
+    protected IReadOnlyList<AssetResponse> assets = [];
     private Dictionary<Guid, string> assetTypes = [];
+
+    protected string? statusMessage;
+
+    protected bool operationOpen;
+    protected OperationType operationType = OperationType.Buy;
+    protected Guid? operationAssetId;
+    protected decimal? operationQuantity;
+    protected decimal? operationPrice;
+    protected DateTime? operationDate;
+    protected string? operationError;
+    protected bool savingOperation;
 
     protected decimal NetWorth => positions.Sum(p => p.Total);
     protected decimal NetInvested => transactions.Sum(t => t.IsBuy ? t.Total : -t.Total);
@@ -63,7 +88,7 @@ public class WalletPage : ComponentBase, IDisposable
 
         try
         {
-            wallet = await Api.GetWalletAsync(WalletId, cts.Token);
+            wallet = await WalletApi.GetWalletAsync(WalletId, cts.Token);
 
             if (wallet is null)
             {
@@ -71,19 +96,7 @@ public class WalletPage : ComponentBase, IDisposable
                 return;
             }
 
-            var positionsTask = Api.GetPositionsAsync(WalletId, cts.Token);
-            var transactionsTask = Api.GetTransactionsAsync(WalletId, cts.Token);
-            var dividendsTask = Api.GetDividendsAsync(WalletId, cts.Token);
-            var assetsTask = Api.GetAssetsAsync(cts.Token);
-
-            await Task.WhenAll(positionsTask, transactionsTask, dividendsTask, assetsTask);
-
-            positions = positionsTask.Result.OrderByDescending(p => p.Total).ToList();
-            transactions = transactionsTask.Result;
-            dividends = dividendsTask.Result;
-            assetTypes = assetsTask.Result.ToDictionary(a => a.AssetId, a => a.Type);
-            allocation = BuildAllocation();
-
+            await FetchWalletDataAsync();
             state = LoadState.Loaded;
         }
         catch (OperationCanceledException) when (cts.IsCancellationRequested)
@@ -95,6 +108,146 @@ public class WalletPage : ComponentBase, IDisposable
             state = LoadState.Error;
         }
     }
+
+    // Busca posições, movimentações, dividendos e ativos sem trocar a tela para "carregando".
+    private async Task FetchWalletDataAsync()
+    {
+        var positionsTask = WalletApi.GetPositionsAsync(WalletId, cts.Token);
+        var transactionsTask = WalletApi.GetTransactionsAsync(WalletId, cts.Token);
+        var dividendsTask = WalletApi.GetDividendsAsync(WalletId, cts.Token);
+        var assetsTask = AssetApi.GetAssetsAsync(cts.Token);
+
+        await Task.WhenAll(positionsTask, transactionsTask, dividendsTask, assetsTask);
+
+        positions = positionsTask.Result.OrderByDescending(p => p.Total).ToList();
+        transactions = transactionsTask.Result;
+        dividends = dividendsTask.Result;
+        assets = assetsTask.Result.OrderBy(a => a.Ticker).ToList();
+        assetTypes = assets.ToDictionary(a => a.AssetId, a => a.Type);
+        allocation = BuildAllocation();
+    }
+
+    // Compra: qualquer ativo cadastrado. Venda e dividendo: só ativos que a carteira possui.
+    protected IReadOnlyList<(Guid AssetId, string Label)> OperationAssetOptions
+        => operationType == OperationType.Buy
+            ? assets.Select(a => (a.AssetId, $"{a.Ticker} — {a.Name}")).ToList()
+            : positions.OrderBy(p => p.Ticker)
+                .Select(p => (p.AssetId, $"{p.Ticker} — {FormatQuantity(p.Quantity)} em carteira")).ToList();
+
+    protected decimal HeldQuantity
+        => positions.FirstOrDefault(p => p.AssetId == operationAssetId)?.Quantity ?? 0;
+
+    protected decimal? OperationTotal => operationType switch
+    {
+        OperationType.Dividend when operationPrice is not null && operationAssetId is not null => HeldQuantity * operationPrice,
+        OperationType.Buy or OperationType.Sell when operationPrice is not null && operationQuantity is not null => operationQuantity * operationPrice,
+        _ => null,
+    };
+
+    protected string SubmitLabel => savingOperation ? "Registrando…" : operationType switch
+    {
+        OperationType.Buy => "Registrar compra",
+        OperationType.Sell => "Registrar venda",
+        _ => "Registrar dividendo",
+    };
+
+    protected void OpenOperation()
+    {
+        operationOpen = true;
+        statusMessage = null;
+        SetOperationType(OperationType.Buy);
+    }
+
+    protected void CloseOperation()
+    {
+        operationOpen = false;
+        operationError = null;
+    }
+
+    protected void SetOperationType(OperationType type)
+    {
+        operationType = type;
+        operationAssetId = null;
+        operationQuantity = null;
+        operationPrice = null;
+        operationDate = type == OperationType.Dividend ? DateTime.Today : null;
+        operationError = null;
+    }
+
+    protected async Task SubmitOperationAsync()
+    {
+        if (savingOperation)
+            return;
+
+        operationError = ValidateOperation();
+        if (operationError is not null)
+            return;
+
+        savingOperation = true;
+
+        try
+        {
+            var assetId = operationAssetId!.Value;
+            var ticker = assets.FirstOrDefault(a => a.AssetId == assetId)?.Ticker ?? "ativo";
+            var total = OperationTotal;
+
+            var result = operationType switch
+            {
+                OperationType.Buy => await WalletApi.BuyAssetAsync(WalletId,
+                    new TradeAssetRequest(assetId, operationQuantity!.Value, operationPrice!.Value), cts.Token),
+                OperationType.Sell => await WalletApi.SellAssetAsync(WalletId,
+                    new TradeAssetRequest(assetId, operationQuantity!.Value, operationPrice!.Value), cts.Token),
+                _ => await WalletApi.ReceiveDividendAsync(WalletId,
+                    new ReceiveDividendRequest(assetId, operationPrice!.Value, operationDate!.Value), cts.Token),
+            };
+
+            if (!result.Succeeded)
+            {
+                operationError = result.Error;
+                return;
+            }
+
+            statusMessage = operationType switch
+            {
+                OperationType.Buy => $"Compra de {FormatQuantity(operationQuantity!.Value)} {ticker} registrada.",
+                OperationType.Sell => $"Venda de {FormatQuantity(operationQuantity!.Value)} {ticker} registrada.",
+                _ => $"Dividendo de {ticker} registrado: {total?.ToString("C")}.",
+            };
+
+            CloseOperation();
+            await FetchWalletDataAsync();
+        }
+        catch (HttpRequestException)
+        {
+            operationError = "Não foi possível falar com a API. Tente novamente.";
+        }
+        finally
+        {
+            savingOperation = false;
+        }
+    }
+
+    private string? ValidateOperation()
+    {
+        if (operationAssetId is null)
+            return "Selecione um ativo.";
+
+        if (operationType != OperationType.Dividend && operationQuantity is not > 0)
+            return "Informe uma quantidade maior que zero.";
+
+        if (operationPrice is not > 0)
+            return operationType == OperationType.Dividend
+                ? "Informe o valor por cota."
+                : "Informe um preço unitário maior que zero.";
+
+        if (operationType == OperationType.Dividend && operationDate is null)
+            return "Informe a data do pagamento.";
+
+        return null;
+    }
+
+    // Blazor omite atributos bool falsos; atributos ARIA precisam do texto "true"/"false".
+    protected static string AriaBool(bool value) => value ? "true" : "false";
 
     protected AssetClass ClassOf(Guid assetId)
         => assetTypes.TryGetValue(assetId, out var type) && AssetClasses.TryGetValue(type, out var assetClass)
