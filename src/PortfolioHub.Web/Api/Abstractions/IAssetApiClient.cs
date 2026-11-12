@@ -4,7 +4,7 @@ using PortfolioHub.Web.Api.Models.Asset.Responses;
 
 namespace PortfolioHub.Web.Api.Abstractions;
 
-public interface IAssetApiCient
+public interface IAssetApiClient
 {
     Task<IReadOnlyList<AssetResponse>> GetAssetsAsync(CancellationToken cancellationToken = default);
 

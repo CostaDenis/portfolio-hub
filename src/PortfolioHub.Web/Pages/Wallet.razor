@@ -40,9 +40,53 @@
 
             case LoadState.Loaded:
                 <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
-                    <div>
+                    <div class="min-w-0">
                         <p class="text-xs font-semibold uppercase tracking-widest text-muted">Carteira</p>
-                        <h1 class="mt-2 text-3xl font-semibold tracking-tight">@wallet!.Name</h1>
+
+                        @if (renaming)
+                        {
+                            <h1 class="sr-only">@wallet!.Name</h1>
+
+                            <form class="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start" @onsubmit="SaveNameAsync" @onsubmit:preventDefault>
+                                <div class="w-full sm:w-80">
+                                    <label for="wallet-rename" class="sr-only">Novo nome da carteira</label>
+                                    <input id="wallet-rename" @ref="renameInput" @bind="newWalletName" @bind:event="oninput"
+                                           @onkeydown="OnRenameKeyDown" maxlength="20" autocomplete="off"
+                                           aria-invalid="@AriaBool(renameError is not null)" aria-describedby="wallet-rename-help"
+                                           class="w-full rounded-lg border border-line bg-surface px-3 py-2 text-2xl font-semibold tracking-tight text-ink focus:border-link focus:outline-2 focus:outline-link aria-invalid:border-danger" />
+                                    @if (renameError is not null)
+                                    {
+                                        <p id="wallet-rename-help" class="mt-2 text-sm text-danger" role="alert">@renameError</p>
+                                    }
+                                    else
+                                    {
+                                        <p id="wallet-rename-help" class="mt-2 text-xs text-muted">Entre 2 e 20 caracteres. Esc cancela.</p>
+                                    }
+                                </div>
+
+                                <div class="flex gap-3">
+                                    <button type="submit" disabled="@savingName"
+                                            class="hover:cursor-pointer rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-surface transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60">
+                                        @(savingName ? "Salvando…" : "Salvar")
+                                    </button>
+                                    <button type="button" @onclick="CloseRename"
+                                            class="hover:cursor-pointer rounded-lg px-5 py-3 text-sm font-medium text-muted transition-colors hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-link">
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                                <h1 class="break-words text-3xl font-semibold tracking-tight">@wallet!.Name</h1>
+                                <button type="button" @ref="renameButton" @onclick="OpenRename"
+                                        aria-label="Renomear carteira @wallet.Name"
+                                        class="hover:cursor-pointer inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-link transition-colors hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link">
+                                    <span aria-hidden="true">✎</span> Renomear
+                                </button>
+                            </div>
+                        }
                     </div>
 
                     @if (!operationOpen)

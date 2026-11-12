@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using PortfolioHub.Web.Api;
 using PortfolioHub.Web.Api.Abstractions;
 using PortfolioHub.Web.Api.Models.Asset.Responses;
@@ -11,7 +12,7 @@ namespace PortfolioHub.Web.Pages;
 public class WalletPage : ComponentBase, IDisposable
 {
     [Inject] private IWalletApiClient WalletApi { get; set; } = default!;
-    [Inject] private AssetApiClient AssetApi { get; set; } = default!;
+    [Inject] private IAssetApiClient AssetApi { get; set; } = default!;
 
     [Parameter] public Guid WalletId { get; set; }
 
@@ -54,6 +55,17 @@ public class WalletPage : ComponentBase, IDisposable
 
     protected string? statusMessage;
 
+    protected bool renaming;
+    protected string newWalletName = "";
+    protected string? renameError;
+    protected bool savingName;
+    protected ElementReference renameInput;
+    protected ElementReference renameButton;
+
+    private enum FocusTarget { None, RenameInput, RenameButton }
+
+    private FocusTarget pendingFocus;
+
     protected bool operationOpen;
     protected OperationType operationType = OperationType.Buy;
     protected Guid? operationAssetId;
@@ -81,6 +93,18 @@ public class WalletPage : ComponentBase, IDisposable
     // Para recarregar quando a rota troca de carteira.
     protected override async Task OnParametersSetAsync()
         => await LoadAsync();
+
+    // O campo e o botão só existem depois do render, então o foco é aplicado aqui.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var target = pendingFocus;
+        pendingFocus = FocusTarget.None;
+
+        if (target == FocusTarget.RenameInput)
+            await renameInput.FocusAsync();
+        else if (target == FocusTarget.RenameButton)
+            await renameButton.FocusAsync();
+    }
 
     protected async Task LoadAsync()
     {
@@ -125,6 +149,68 @@ public class WalletPage : ComponentBase, IDisposable
         assets = assetsTask.Result.OrderBy(a => a.Ticker).ToList();
         assetTypes = assets.ToDictionary(a => a.AssetId, a => a.Type);
         allocation = BuildAllocation();
+    }
+
+    protected void OpenRename()
+    {
+        renaming = true;
+        newWalletName = wallet!.Name;
+        renameError = null;
+        statusMessage = null;
+        pendingFocus = FocusTarget.RenameInput;
+    }
+
+    protected void CloseRename()
+    {
+        renaming = false;
+        renameError = null;
+        pendingFocus = FocusTarget.RenameButton;
+    }
+
+    protected void OnRenameKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+            CloseRename();
+    }
+
+    protected async Task SaveNameAsync()
+    {
+        if (savingName)
+            return;
+
+        var name = newWalletName.Trim();
+
+        if (name == wallet!.Name)
+        {
+            CloseRename();
+            return;
+        }
+
+        savingName = true;
+        renameError = null;
+
+        try
+        {
+            var result = await WalletApi.UpdateWalletNameAsync(WalletId, new UpdateWalletNameRequest(name), cts.Token);
+
+            if (!result.Succeeded)
+            {
+                renameError = result.Error;
+                return;
+            }
+
+            wallet = result.Value!;
+            statusMessage = $"Carteira renomeada para \"{wallet.Name}\".";
+            CloseRename();
+        }
+        catch (HttpRequestException)
+        {
+            renameError = "Não foi possível falar com a API. Tente novamente.";
+        }
+        finally
+        {
+            savingName = false;
+        }
     }
 
     // Compra: qualquer ativo cadastrado. Venda e dividendo: só ativos que a carteira possui.

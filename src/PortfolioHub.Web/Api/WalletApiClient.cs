@@ -1,14 +1,13 @@
 using System.Net.Http.Json;
 using PortfolioHub.Web.Api.Abstractions;
 using PortfolioHub.Web.Api.Models;
-using PortfolioHub.Web.Api.Models.Asset.Requests;
 using PortfolioHub.Web.Api.Models.Wallet.Requests;
 using PortfolioHub.Web.Api.Models.Wallet.Responses;
 
 namespace PortfolioHub.Web.Api;
 
-public class WalletApiClient(IHttpClientFactory httpClientFactory)
-    : BaseApiClient(httpClientFactory), IWalletApiClient
+public class WalletApiClient(HttpClient client)
+    : BaseApiClient(client), IWalletApiClient
 {
     public async Task<WalletDividendsResponse> GetDividendsAsync(Guid walletId,
         CancellationToken cancellationToken = default)
@@ -39,7 +38,16 @@ public class WalletApiClient(IHttpClientFactory httpClientFactory)
         CancellationToken cancellationToken = default)
     {
         using var response = await _client.PostAsJsonAsync
-            ("v1/assets", request, cancellationToken);
+            ("v1/wallets", request, cancellationToken);
+
+        return await ReadResultAsync<WalletResponse>(response, cancellationToken);
+    }
+
+    public async Task<ApiResult<WalletResponse>> UpdateWalletNameAsync(Guid walletId, UpdateWalletNameRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await _client.PutAsJsonAsync
+            ($"v1/wallets/{walletId}", request, cancellationToken);
 
         return await ReadResultAsync<WalletResponse>(response, cancellationToken);
     }

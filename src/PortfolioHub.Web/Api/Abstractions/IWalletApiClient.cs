@@ -15,6 +15,9 @@ public interface IWalletApiClient
     Task<ApiResult<WalletResponse>> CreateWalletAsync(CreateWalletRequest request,
         CancellationToken cancellationToken = default);
 
+    Task<ApiResult<WalletResponse>> UpdateWalletNameAsync(Guid walletId, UpdateWalletNameRequest request,
+        CancellationToken cancellationToken = default);
+
     Task<ApiResult> BuyAssetAsync(Guid walletId, TradeAssetRequest request,
         CancellationToken cancellationToken = default);
 

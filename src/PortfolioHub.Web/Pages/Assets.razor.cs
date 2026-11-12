@@ -8,7 +8,7 @@ namespace PortfolioHub.Web.Pages;
 
 public class AssetsPage : ComponentBase, IDisposable
 {
-    [Inject] private IAssetApiCient Api { get; set; } = default!;
+    [Inject] private IAssetApiClient Api { get; set; } = default!;
 
     protected enum LoadState { Loading, Loaded, Error }
 

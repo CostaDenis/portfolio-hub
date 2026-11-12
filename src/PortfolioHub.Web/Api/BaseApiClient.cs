@@ -1,16 +1,14 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using PortfolioHub.Web.Api.Models;
 
 namespace PortfolioHub.Web.Api;
 
-public abstract class BaseApiClient
+public abstract class BaseApiClient(HttpClient client)
 {
 
-    protected readonly HttpClient _client;
-
-    protected BaseApiClient(IHttpClientFactory httpClientFactory)
-        => _client = httpClientFactory.CreateClient();
+    protected readonly HttpClient _client = client;
 
     protected async Task<T?> GetOrDefaultAsync<T>(string uri, CancellationToken cancellationToken)
     {
@@ -55,9 +53,17 @@ public abstract class BaseApiClient
             return null;
         }
 
-        var problem = await responseMessage.Content.ReadFromJsonAsync<ProblemResponse>(cancellationToken);
+        const string defaultError = "Não foi possível concluir a operação";
 
-        return problem?.Detail ?? problem?.Title ?? "Não foi possível concluir a operação";
+        try
+        {
+            var problem = await responseMessage.Content.ReadFromJsonAsync<ProblemResponse>(cancellationToken);
+            return problem?.Detail ?? problem?.Title ?? defaultError;
+        }
+        catch (JsonException)
+        {
+            return defaultError;
+        }
     }
 
     //TRequest -> convenção de nome para receber

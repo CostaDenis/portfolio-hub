@@ -12,9 +12,8 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 var apiBaseUrl = builder.Configuration["Api:BaseUrl"]
     ?? throw new InvalidOperationException("Configure 'Api:BaseUrl' em wwwroot/appsettings.json.");
 
-builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
-builder.Services.AddScoped<IWalletApiClient, WalletApiClient>();
-builder.Services.AddScoped<IAssetApiCient, AssetApiClient>();
+builder.Services.AddHttpClient<IWalletApiClient, WalletApiClient>(c => c.BaseAddress = new Uri(apiBaseUrl));
+builder.Services.AddHttpClient<IAssetApiClient, AssetApiClient>(c => c.BaseAddress = new Uri(apiBaseUrl));
 
 var culture = new CultureInfo("pt-BR");
 CultureInfo.DefaultThreadCurrentCulture = culture;

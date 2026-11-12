@@ -6,8 +6,8 @@ using PortfolioHub.Web.Api.Models.Asset.Responses;
 
 namespace PortfolioHub.Web.Api;
 
-public class AssetApiClient(IHttpClientFactory httpClientFactory)
-    : BaseApiClient(httpClientFactory), IAssetApiCient
+public class AssetApiClient(HttpClient client)
+    : BaseApiClient(client), IAssetApiClient
 {
 
     public async Task<IReadOnlyList<AssetResponse>> GetAssetsAsync(CancellationToken cancellationToken = default)
