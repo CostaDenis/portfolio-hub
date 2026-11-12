@@ -37,6 +37,8 @@ public class Transaction : Entity
     public Quantity Quantity { get; private set; }
     public Money UnitPrice { get; private set; }
     public Money Total => UnitPrice * Quantity;
+    public DateTime? ReversedAt { get; private set; }
+    public bool IsReversed => ReversedAt is not null;
 
     public bool IsBuy()
         => Type == ETransactionType.Buy;
@@ -44,4 +46,12 @@ public class Transaction : Entity
     public bool IsSell()
         => Type == ETransactionType.Sell;
 
+
+    internal void Reverse()
+    {
+        if (IsReversed)
+            throw new AlreadyReversedException();
+
+        ReversedAt = DateTime.UtcNow;
+    }
 }

@@ -13,6 +13,7 @@ public class WalletTests
     private readonly Wallet _wallet;
     private readonly Asset _xpml11;
     private readonly Asset _btci11;
+    private readonly Asset _bbas3;
 
     public WalletTests()
     {
@@ -24,6 +25,8 @@ public class WalletTests
         _btci11 = new Asset(new AssetName("BTG Pactual"), new Ticker("BTCI11"),
             EAssetType.RealStateFund, new MarketPrice(9.1m));
 
+        _bbas3 = new Asset(new AssetName("Banco do Brasil SA"), new Ticker("BBAS3"),
+            EAssetType.Stock, new MarketPrice(17.7m));
     }
 
     [TestMethod]
@@ -300,4 +303,102 @@ public class WalletTests
         Assert.HasCount(1, _wallet.Transactions);
     }
 
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Return_Current_Quantity_After_Reversing_Buy()
+    {
+        _wallet.BuyAsset(_bbas3, 20, 17m);
+        var transaction = _wallet.Transactions.Last();
+        _wallet.ReverseTransaction(transaction.Id);
+
+        Assert.AreEqual(0, _wallet.GetCurrentQuantity(_bbas3));
+        Assert.IsTrue(transaction.IsReversed);
+        Assert.HasCount(1, _wallet.GetTransactions(_bbas3));
+    }
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Return_Current_Quantity_After_Reversing_Sell()
+    {
+        _wallet.BuyAsset(_bbas3, 20, 17m);
+        _wallet.SellAsset(_bbas3, 10, 18m);
+        var transaction = _wallet.Transactions.Last();
+
+        _wallet.ReverseTransaction(transaction.Id);
+
+        Assert.AreEqual(20, _wallet.GetCurrentQuantity(_bbas3));
+        Assert.IsTrue(transaction.IsReversed);
+        Assert.HasCount(2, _wallet.GetTransactions(_bbas3));
+    }
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Return_Zero_NetWorth_After_Reversing_Only_Buy()
+    {
+        _wallet.BuyAsset(_bbas3, 20, 17m);
+
+        var transaction = _wallet.GetTransactions(_bbas3).Single();
+
+        _wallet.ReverseTransaction(transaction.Id);
+
+        Assert.AreEqual(0, _wallet.GetNetWorth());
+    }
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Return_Exception_When_Reversing_Buy_Already_Sold()
+    {
+        _wallet.BuyAsset(_bbas3, 20, 17m);
+
+        var transaction = _wallet.GetTransactions(_bbas3).Single();
+        _wallet.SellAsset(_bbas3, 10, 20m);
+
+        Assert.Throws<InsufficientBalanceException>
+            (() => _wallet.ReverseTransaction(transaction.Id));
+
+        Assert.IsFalse(transaction.IsReversed);
+        Assert.AreEqual(10, _wallet.GetCurrentQuantity(_bbas3));
+    }
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Return_Exception_When_Reversing_Transaction_Twice()
+    {
+        _wallet.BuyAsset(_bbas3, 20, 17m);
+        var lastTransaction = _wallet.Transactions.Last();
+
+        _wallet.ReverseTransaction(lastTransaction.Id);
+
+        Assert.Throws<AlreadyReversedException>
+            (() => _wallet.ReverseTransaction(lastTransaction.Id));
+    }
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Return_Exception_When_Transaction_Is_Not_In_Wallet()
+    {
+        _wallet.BuyAsset(_bbas3, 20, 17m);
+
+        Assert.Throws<TransactionNotFoundException>
+            (() => _wallet.ReverseTransaction(Guid.NewGuid()));
+    }
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Not_Count_Reversed_Dividend_In_GetTotalDividends()
+    {
+        _wallet.BuyAsset(_bbas3, 20, 17m);
+        _wallet.ReceiveDividend(_bbas3, new Money(0.68m), DateTime.UtcNow);
+
+        _wallet.ReceiveDividend(_bbas3, new Money(0.6m), DateTime.UtcNow);
+        var lastDividend = _wallet.Dividends.Last();
+
+        _wallet.ReverseDividend(lastDividend.Id);
+
+        var correctTotalDividend = 20 * 0.68m;
+        var totalDividendWallet = _wallet.GetTotalDividends();
+
+        Assert.AreEqual((Money)correctTotalDividend, totalDividendWallet);
+        Assert.HasCount(2, _wallet.Dividends);
+    }
 }

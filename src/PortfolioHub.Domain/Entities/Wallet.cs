@@ -9,6 +9,9 @@ public class Wallet(WalletName name) : Entity
     private readonly List<Transaction> _transactions = [];
     private readonly List<Dividend> _dividends = [];
 
+    private IEnumerable<Transaction> ActiveTransactions => _transactions.Where(x => x.IsReversed == false);
+    private IEnumerable<Dividend> ActiveDividends => _dividends.Where(x => x.IsReversed == false);
+
     public WalletName Name { get; private set; } = name;
     public IReadOnlyCollection<Transaction> Transactions { get { return _transactions.ToArray(); } }
     public IReadOnlyCollection<Dividend> Dividends { get { return _dividends.ToArray(); } }
@@ -36,7 +39,7 @@ public class Wallet(WalletName name) : Entity
     {
         decimal quantity = 0;
 
-        foreach (var transaction in GetTransactions(asset))
+        foreach (var transaction in GetTransactions(asset).Where(x => x.IsReversed == false))
         {
             if (transaction.IsBuy())
                 quantity += transaction.Quantity.Value;
@@ -51,7 +54,7 @@ public class Wallet(WalletName name) : Entity
 
     // Ativos com quantidade atual maior que zero (exclui os que já foram vendidos por completo).
     public IReadOnlyCollection<Asset> GetHeldAssets()
-        => _transactions
+        => ActiveTransactions
             .Select(transaction => transaction.Asset)
             .DistinctBy(asset => asset.Id)
             .Where(ContainsAsset)
@@ -87,7 +90,7 @@ public class Wallet(WalletName name) : Entity
     public Money GetTotalDividendsByAsset(Asset asset)
     {
         Money totalReceived = 0;
-        foreach (var dividend in _dividends)
+        foreach (var dividend in ActiveDividends)
         {
             if (dividend.Asset.Id == asset.Id)
                 totalReceived += dividend.Total;
@@ -99,9 +102,33 @@ public class Wallet(WalletName name) : Entity
     public Money GetTotalDividends()
     {
         Money totalReceived = 0;
-        foreach (var dividend in _dividends)
+        foreach (var dividend in ActiveDividends)
             totalReceived += dividend.Total;
 
         return totalReceived;
+    }
+
+    // É a partir da própria carteira para fazer o estorno
+    public void ReverseTransaction(Guid transactionId)
+    {
+        var transaction = _transactions.FirstOrDefault(x => x.Id == transactionId)
+            ?? throw new TransactionNotFoundException();
+
+        if (transaction.IsReversed)
+            throw new AlreadyReversedException();
+
+        if (transaction.IsBuy()
+            && GetCurrentQuantity(transaction.Asset) < transaction.Quantity)
+            throw new InsufficientBalanceException("Não é possível estornar essa compra: a quantidade já foi vendida!");
+
+        transaction.Reverse();
+    }
+
+    public void ReverseDividend(Guid dividendId)
+    {
+        var dividend = _dividends.FirstOrDefault(x => x.Id == dividendId)
+            ?? throw new DividendNotFoundException();
+
+        dividend.Reverse();
     }
 }

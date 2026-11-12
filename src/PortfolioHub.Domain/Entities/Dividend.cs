@@ -34,4 +34,14 @@ public class Dividend : Entity
     public Money ValuePerShare { get; private set; }
     public DateTime Date { get; private set; }
     public Money Total => Quantity * ValuePerShare;
+    public DateTime? ReversedAt { get; private set; }
+    public bool IsReversed => ReversedAt is not null;
+
+    internal void Reverse()
+    {
+        if (IsReversed)
+            throw new AlreadyReversedException();
+
+        ReversedAt = DateTime.UtcNow;
+    }
 }
