@@ -91,7 +91,7 @@ public class HomePage : ComponentBase, IDisposable
                 return;
             }
 
-            Navigation.NavigateTo($"carteiras/{result.Value!.WalletId}");
+            Navigation.NavigateTo($"wallets/{result.Value!.WalletId}");
         }
         catch (HttpRequestException)
         {

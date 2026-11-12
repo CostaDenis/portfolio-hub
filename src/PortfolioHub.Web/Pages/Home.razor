@@ -39,7 +39,7 @@
             {
                 <button type="button" @onclick="OpenForm"
                         class="hover:cursor-pointer rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-surface transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
-                    + Nova carteira
+                    Nova carteira
                 </button>
             }
         </header>
@@ -50,68 +50,70 @@
                 <h2 id="new-wallet-title" class="text-lg font-semibold">
                     @(wallets.Count == 0 ? "Crie sua primeira carteira" : "Nova carteira")
                 </h2>
-                <p class="mt-1 text-sm text-muted">Use carteiras para separar seus investimentos, por exemplo: Ações, FIIs ou Aposentadoria.</p>
+                <p class="mt-1 text-sm text-muted">Use carteiras para separar seus investimentos, por exemplo: Ações, FIIs ou
+                    Aposentadoria.</p>
 
-                <form class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-start" @onsubmit="CreateWalletAsync" @onsubmit:preventDefault>
-                    <div class="w-full sm:max-w-sm">
-                        <label for="wallet-name" class="sr-only">Nome da carteira</label>
-                        <input id="wallet-name" @ref="nameInput" @bind="newWalletName" @bind:event="oninput"
-                               maxlength="20" placeholder="Nome da carteira" autocomplete="off"
-                               aria-invalid="@(createError is not null ? "true" : "false")" aria-describedby="wallet-name-help"
-                               class="w-full rounded-lg border border-line bg-page px-4 py-3 text-ink placeholder:text-muted focus:border-link focus:outline-2 focus:outline-link aria-invalid:border-danger" />
-                        @if (createError is not null)
-                        {
-                            <p id="wallet-name-help" class="mt-2 text-sm text-danger" role="alert">@createError</p>
-                        }
-                        else
-                        {
-                            <p id="wallet-name-help" class="mt-2 text-xs text-muted">Entre 2 e 20 caracteres.</p>
-                        }
-                    </div>
+                    <form class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-start" @onsubmit="CreateWalletAsync"
+                          @onsubmit:preventDefault>
+                        <div class="w-full sm:max-w-sm">
+                            <label for="wallet-name" class="sr-only">Nome da carteira</label>
+                            <input id="wallet-name" @ref="nameInput" @bind="newWalletName" @bind:event="oninput" maxlength="20"
+                                   placeholder="Nome da carteira" autocomplete="off"
+                                   aria-invalid="@(createError is not null ? "true" : "false")" aria-describedby="wallet-name-help"
+                                   class="w-full rounded-lg border border-line bg-page px-4 py-3 text-ink placeholder:text-muted focus:border-link focus:outline-2 focus:outline-link aria-invalid:border-danger" />
+                            @if (createError is not null)
+                            {
+                                <p id="wallet-name-help" class="mt-2 text-sm text-danger" role="alert">@createError</p>
+                            }
+                            else
+                            {
+                                <p id="wallet-name-help" class="mt-2 text-xs text-muted">Entre 2 e 20 caracteres.</p>
+                            }
+                        </div>
 
-                    <div class="flex gap-3">
-                        <button type="submit" disabled="@creating"
-                                class="hover:cursor-pointer rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-surface transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60">
-                            @(creating ? "Criando…" : "Criar carteira")
-                        </button>
-                        @if (wallets.Count > 0)
-                        {
-                            <button type="button" @onclick="CloseForm"
-                                    class="hover:cursor-pointer rounded-lg px-5 py-3 text-sm font-medium text-muted transition-colors hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-link">
-                                Cancelar
+                        <div class="flex gap-3">
+                            <button type="submit" disabled="@creating"
+                                    class="hover:cursor-pointer rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-surface transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60">
+                                @(creating ? "Criando…" : "Criar carteira")
                             </button>
-                        }
-                    </div>
-                </form>
-            </section>
-        }
+                            @if (wallets.Count > 0)
+                            {
+                                <button type="button" @onclick="CloseForm"
+                                        class="hover:cursor-pointer rounded-lg px-5 py-3 text-sm font-medium text-muted transition-colors hover:bg-line/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-link">
+                                    Cancelar
+                                </button>
+                            }
+                        </div>
+                    </form>
+                </section>
+            }
 
-        @if (wallets.Count > 0)
-        {
-            <ul class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                @foreach (var wallet in wallets)
-                {
-                    var share = TotalNetWorth == 0 ? 0 : wallet.NetWorth / TotalNetWorth;
+            @if (wallets.Count > 0)
+            {
+                <ul class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    @foreach (var wallet in wallets)
+                    {
+                        var share = TotalNetWorth == 0 ? 0 : wallet.NetWorth / TotalNetWorth;
 
-                    <li>
-                        <a href="@($"carteiras/{wallet.WalletId}")"
-                           class="group block h-full rounded-xl border border-line bg-surface p-6 transition-colors hover:border-primary/40 hover:bg-primary/3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-                            <div class="flex items-start justify-between gap-3">
-                                <h2 class="min-w-0 truncate text-lg font-semibold">@wallet.Name</h2>
-                                <span class="shrink-0 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true">→</span>
-                            </div>
-                            <p class="mt-4 text-2xl font-semibold tracking-tight tabular-nums">@wallet.NetWorth.ToString("C")</p>
-                            <p class="mt-2 text-sm text-muted">
-                                @AssetCountLabel(wallet.AssetCount)
-                                @if (wallets.Count > 1 && wallet.NetWorth > 0)
-                                {
-                                    <span class="tabular-nums"> · @share.ToString("P1") do total</span>
-                                }
-                            </p>
-                        </a>
-                    </li>
-                }
-            </ul>
+                        <li>
+                            <a href="@($"wallets/{wallet.WalletId}")"
+                               class="group block h-full rounded-xl border border-line bg-surface p-6 transition-colors hover:border-primary/40 hover:bg-primary/3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                                <div class="flex items-start justify-between gap-3">
+                                    <h2 class="min-w-0 truncate text-lg font-semibold">@wallet.Name</h2>
+                            
+                                </div>
+                                <p class="mt-4 text-2xl font-semibold tracking-tight tabular-nums">@wallet.NetWorth.ToString("C")</p>
+                                <p class="mt-2 text-sm text-muted">
+                                    @AssetCountLabel(wallet.AssetCount)
+                                    @if (wallets.Count > 1 && wallet.NetWorth > 0)
+                                    {
+                                        <span class="tabular-nums"> · @share.ToString("P1") do total</span>
+                                    }
+                                </p>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            }
+            break;
         }
-        break;
-}

@@ -1,0 +1,147 @@
+@page "/wallets/{WalletId:guid}/history"
+@inherits WalletHistoryPage
+
+<PageTitle>Histórico · @(wallet?.Name ?? "Carteira") | PortfolioHub</PageTitle>
+
+<a href="wallets/@WalletId"
+   class="mb-6 inline-flex items-center gap-1 rounded text-sm font-medium text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-link">
+    <span aria-hidden="true">←</span> @(wallet?.Name ?? "Carteira")
+</a>
+
+@switch (state)
+{
+    case LoadState.WalletNotFound:
+        <section class="rounded-xl border border-line bg-surface p-6 sm:p-8">
+            <h1 class="text-xl font-semibold">Carteira não encontrada</h1>
+            <p class="mt-2 text-sm text-muted">Ela pode ter sido removida ou o endereço está incorreto.</p>
+            <a href="" class="mt-6 inline-block text-sm font-medium text-link underline underline-offset-4">Ver todas as
+                carteiras</a>
+            </section>
+            break;
+
+    case LoadState.Error:
+                <ApiErrorNotice Title="Não foi possível carregar o histórico" OnRetry="LoadAsync" />
+                break;
+
+            case LoadState.Loading:
+                <div class="animate-pulse" role="status" aria-label="Carregando histórico">
+                    <div class="h-4 w-32 rounded bg-line"></div>
+                    <div class="mt-3 h-8 w-56 rounded bg-line"></div>
+                    <div class="mt-8 grid gap-4 md:grid-cols-3">
+                        @for (var i = 0; i < 3; i++)
+                        {
+                            <div class="h-32 rounded-xl border border-line bg-surface"></div>
+                        }
+                    </div>
+                    <div class="mt-6 h-96 rounded-xl border border-line bg-surface"></div>
+                </div>
+                break;
+
+            case LoadState.Loaded:
+                <header class="mb-8">
+                    <p class="text-xs font-semibold uppercase tracking-widest text-muted">Histórico</p>
+                    <h1 class="mt-2 wrap-break-words text-3xl font-semibold tracking-tight">@wallet!.Name</h1>
+                </header>
+
+                @if (entries.Count == 0)
+                {
+                    <section class="rounded-xl border border-dashed border-line bg-surface p-8 text-center">
+                        <h2 class="font-semibold">Nenhuma movimentação ainda</h2>
+                        <p class="mt-2 text-sm text-muted">Compras, vendas e dividendos registrados nesta carteira aparecem aqui.</p>
+                        <a href="wallets/@WalletId" class="mt-6 inline-block text-sm font-medium text-link underline underline-offset-4">
+                            Registrar uma operação
+                        </a>
+                    </section>
+                }
+                else
+                {
+                    <div class="grid gap-4 md:grid-cols-3">
+                        <StatCard Title="Total comprado" Value="@TotalBought.ToString("C")" />
+                        <StatCard Title="Total vendido" Value="@TotalSold.ToString("C")" />
+                        <StatCard Title="Dividendos recebidos" Value="@TotalDividends.ToString("C")" ValueClass="text-success" />
+                    </div>
+
+                    <section class="mt-6 rounded-xl border border-line bg-surface" aria-labelledby="history-title">
+                        <div class="flex flex-col gap-4 border-b border-line p-6">
+                            <h2 id="history-title" class="text-lg font-semibold">Movimentações</h2>
+
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div class="flex flex-wrap gap-2" role="group" aria-label="Filtrar por tipo">
+                                    <button type="button" @onclick="() => SetKindFilter(null)" aria-pressed="@AriaBool(kindFilter is null)"
+                                            class="@ChipClass(kindFilter is null)">
+                                        Todas <span class="tabular-nums opacity-70">@CountByKind(null)</span>
+                                    </button>
+                                    @foreach (var option in Kinds)
+                                    {
+                                        <button type="button" @onclick="() => SetKindFilter(option.Kind)"
+                                                aria-pressed="@AriaBool(kindFilter == option.Kind)" class="@ChipClass(kindFilter == option.Kind)">
+                                            @option.Label <span class="tabular-nums opacity-70">@CountByKind(option.Kind)</span>
+                                        </button>
+                                    }
+                                </div>
+
+                                <div class="sm:w-56">
+                                    <label for="history-ticker" class="sr-only">Filtrar por ativo</label>
+                                    <select id="history-ticker" @bind="tickerFilter"
+                                            class="hover:cursor-pointer w-full rounded-lg border border-line bg-page px-4 py-2 text-sm text-ink focus:border-link focus:outline-2 focus:outline-link">
+                                        <option value="">Todos os ativos</option>
+                                        @foreach (var ticker in tickers)
+                                        {
+                                            <option value="@ticker">@ticker</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (Groups.Count == 0)
+                        {
+                            <div class="p-8 text-center">
+                                <p class="font-medium">Nenhuma movimentação com esses filtros</p>
+                                <button type="button" @onclick="ClearFilters"
+                                        class="hover:cursor-pointer mt-3 rounded text-sm font-medium text-link underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-link">
+                                    Limpar filtros
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var group in Groups)
+                            {
+                                <div class="border-b border-line px-6 py-4 last:border-0">
+                                    <h3 class="text-xs font-semibold uppercase tracking-widest text-muted">@group.Label</h3>
+
+                                    <ul class="mt-2 divide-y divide-line">
+                                        @foreach (var entry in group.Entries)
+                                        {
+                                            <li class="flex items-center justify-between gap-4 py-3">
+                                                <div class="min-w-0">
+                                                    <p class="text-sm">
+                                                        <span class="@BadgeClass(entry.Kind) mr-2 rounded px-1.5 py-0.5 text-xs font-semibold">
+                                                            @KindLabel(entry.Kind)
+                                                        </span>
+                                                        <span class="font-semibold">@entry.Ticker</span>
+                                                    </p>
+                                                    <p class="mt-1 text-xs text-muted tabular-nums">
+                                                        @FormatQuantity(entry.Quantity) × @PriceFormatter.Format(entry.UnitPrice) ·
+                                                        @entry.Date.ToString("dd/MM/yyyy")
+                                                    </p>
+                                                </div>
+                                                @if (entry.Kind == EntryKind.Dividend)
+                                                {
+                                                    <p class="shrink-0 text-sm font-medium text-success tabular-nums">+@entry.Total.ToString("C")</p>
+                                                }
+                                                else
+                                                {
+                                                    <p class="shrink-0 text-sm font-medium tabular-nums">@entry.Total.ToString("C")</p>
+                                                }
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        }
+                    </section>
+                }
+                break;
+            }
