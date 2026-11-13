@@ -55,5 +55,12 @@ public class TransactionMapping : IEntityTypeConfiguration<Transaction>
             .IsRequired();
 
         builder.Ignore(x => x.Total);
+
+        builder.Property(x => x.ReversedAt)
+            .HasColumnName("ReversedAt")
+            .HasColumnType("DATETIME2")
+            .IsRequired(false);
+
+        builder.Ignore(x => x.IsReversed);
     }
 }

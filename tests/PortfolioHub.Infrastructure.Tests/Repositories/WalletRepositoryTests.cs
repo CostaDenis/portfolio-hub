@@ -284,4 +284,79 @@ public class WalletRepositoryTests : InfrastructureTestBase
 
         Assert.HasCount(0, result);
     }
+
+    [TestMethod]
+    [TestCategory("WalletRepository tests")]
+    public async Task Should_Persist_ReversedAt_When_Reversing_Transaction()
+    {
+        _wallet.BuyAsset(_asset, new Quantity(10), new Money(105m));
+        var transactionId = _wallet.Transactions.Single().Id;
+
+        await using (var setupContext = CreateDbContext())
+        {
+            setupContext.Wallets.Add(_wallet);
+            await setupContext.SaveChangesAsync();
+        }
+
+        await using (var updateContext = CreateDbContext())
+        {
+            var repository = new WalletRepository(updateContext);
+            var storedWallet = await repository.GetByIdAsync(_wallet.Id, CancellationToken.None);
+            Assert.IsNotNull(storedWallet);
+
+            storedWallet.ReverseTransaction(transactionId);
+            await repository.UpdateAsync(storedWallet, CancellationToken.None);
+        }
+
+        await using var verificationContext = CreateDbContext();
+        var verificationRepository = new WalletRepository(verificationContext);
+        var result = await verificationRepository.GetByIdAsync(_wallet.Id, CancellationToken.None);
+
+        Assert.IsNotNull(result);
+        Assert.HasCount(1, result.Transactions);
+        var reversed = result.Transactions.Single();
+        Assert.IsTrue(reversed.IsReversed);
+        Assert.IsNotNull(reversed.ReversedAt);
+        Assert.AreEqual(0m, result.GetCurrentQuantity(_asset).Value);
+    }
+
+    [TestMethod]
+    [TestCategory("WalletRepository tests")]
+    public async Task Should_Persist_ReversedAt_When_Reversing_Dividend()
+    {
+        _wallet.BuyAsset(_asset, new Quantity(10), new Money(105m));
+        _wallet.ReceiveDividend(_asset, new Money(0.92m), DateTime.UtcNow);
+
+        var dividendId = _wallet.Dividends.Single().Id;
+
+        await using (var setupContext = CreateDbContext())
+        {
+            setupContext.Wallets.Add(_wallet);
+            await setupContext.SaveChangesAsync(CancellationToken.None);
+        }
+
+        await using (var updateContext = CreateDbContext())
+        {
+            var repository = new WalletRepository(updateContext);
+            var storedWallet = await repository.GetByIdAsync(_wallet.Id, CancellationToken.None);
+
+            Assert.IsNotNull(storedWallet);
+
+            storedWallet.ReverseDividend(dividendId);
+            await repository.UpdateAsync(storedWallet, CancellationToken.None);
+        }
+
+        await using var verificationContext = CreateDbContext();
+        var verificationRepository = new WalletRepository(verificationContext);
+        var result = await verificationRepository.GetByIdAsync(_wallet.Id, CancellationToken.None);
+
+        Assert.IsNotNull(result);
+        Assert.HasCount(1, result.Dividends);
+
+        var reversed = result.Dividends.Single();
+
+        Assert.IsTrue(reversed.IsReversed);
+        Assert.IsNotNull(reversed.ReversedAt);
+        Assert.AreEqual(0m, result.GetTotalDividends().Value);
+    }
 }

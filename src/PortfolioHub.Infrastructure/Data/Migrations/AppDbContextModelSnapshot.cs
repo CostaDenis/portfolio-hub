@@ -17,7 +17,7 @@ namespace PortfolioHub.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.11")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -72,6 +72,10 @@ namespace PortfolioHub.Infrastructure.Migrations
                         .HasColumnType("decimal(18,8)")
                         .HasColumnName("Quantity");
 
+                    b.Property<DateTime?>("ReversedAt")
+                        .HasColumnType("DATETIME2")
+                        .HasColumnName("ReversedAt");
+
                     b.Property<decimal>("ValuePerShare")
                         .HasPrecision(18, 8)
                         .HasColumnType("decimal(18,8)")
@@ -106,6 +110,10 @@ namespace PortfolioHub.Infrastructure.Migrations
                         .HasPrecision(18, 8)
                         .HasColumnType("decimal(18,8)")
                         .HasColumnName("Quantity");
+
+                    b.Property<DateTime?>("ReversedAt")
+                        .HasColumnType("DATETIME2")
+                        .HasColumnName("ReversedAt");
 
                     b.Property<string>("Type")
                         .IsRequired()
