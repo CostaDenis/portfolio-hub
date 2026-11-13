@@ -23,7 +23,8 @@ public class GetWalletDividendsQueryHandler(WalletFinder walletFinder)
                 dividend.Quantity,
                 dividend.ValuePerShare,
                 dividend.Date,
-                dividend.Total));
+                dividend.Total,
+                dividend.ReversedAt));
         }
 
         return new WalletDividendsDTO(

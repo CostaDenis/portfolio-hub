@@ -43,7 +43,8 @@ public class GetWalletTransactionsQueryHandler(WalletFinder walletFinder)
                 transaction.Date,
                 transaction.Quantity,
                 transaction.UnitPrice,
-                transaction.Total))
+                transaction.Total,
+                transaction.ReversedAt))
             .ToList()
             .AsReadOnly();
     }
