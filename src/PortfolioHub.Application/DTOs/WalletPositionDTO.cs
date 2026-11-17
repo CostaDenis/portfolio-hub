@@ -1,11 +1,13 @@
 namespace PortfolioHub.Application.DTOs;
 
 public class WalletPositionDTO(Guid assetId, string ticker,
-    string assetName, decimal quantity, decimal marketPrice)
+    string assetName, decimal quantity,
+    decimal marketPrice, decimal averagePrice)
 {
     public Guid AssetId { get; init; } = assetId;
     public string AssetName { get; init; } = assetName;
     public string Ticker { get; init; } = ticker;
     public decimal Quantity { get; init; } = quantity;
     public decimal MarketPrice { get; init; } = marketPrice;
+    public decimal AveragePrice { get; init; } = averagePrice;
 }

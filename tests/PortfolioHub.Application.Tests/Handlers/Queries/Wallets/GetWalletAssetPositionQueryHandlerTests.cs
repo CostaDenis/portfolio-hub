@@ -34,8 +34,8 @@ public class GetWalletAssetPositionQueryHandlerTests
         Assert.AreEqual(asset.Ticker.Value, result.Ticker);
         Assert.AreEqual(asset.Name.Value, result.AssetName);
         Assert.AreEqual(asset.MarketPrice.Price.Value, result.MarketPrice);
+        Assert.AreEqual(105m, result.AveragePrice);
         Assert.IsFalse(walletRepository.UpdateWasCalled);
         Assert.IsFalse(walletRepository.CreateWasCalled);
-
     }
 }

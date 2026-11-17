@@ -51,11 +51,13 @@ public class GetWalletPositionEndpointTests : ApiTestBase
         Assert.AreEqual("BTC", bitcoinJson.GetProperty("ticker").GetString());
         Assert.AreEqual(bitcoinQuantity, bitcoinJson.GetProperty("quantity").GetDecimal());
         Assert.AreEqual(400000m, bitcoinJson.GetProperty("marketPrice").GetDecimal());
+        Assert.AreEqual(380000m, bitcoinJson.GetProperty("averagePrice").GetDecimal());
 
         Assert.AreEqual("Wibx", wibxJson.GetProperty("assetName").GetString());
         Assert.AreEqual("WBX", wibxJson.GetProperty("ticker").GetString());
         Assert.AreEqual(wibxQuantity, wibxJson.GetProperty("quantity").GetDecimal());
         Assert.AreEqual(0.04m, wibxJson.GetProperty("marketPrice").GetDecimal());
+        Assert.AreEqual(0.03m, wibxJson.GetProperty("averagePrice").GetDecimal());
     }
 
     [TestMethod]

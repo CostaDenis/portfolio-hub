@@ -44,6 +44,7 @@ public class GetWalletAssetPositionEndpointTests : ApiTestBase
         Assert.AreEqual("Bitcoin", body.GetProperty("assetName").GetString());
         Assert.AreEqual(0.0010m, body.GetProperty("quantity").GetDecimal());
         Assert.AreEqual(400000m, body.GetProperty("marketPrice").GetDecimal());
+        Assert.AreEqual(390000m, body.GetProperty("averagePrice").GetDecimal());
     }
 
     [TestMethod]

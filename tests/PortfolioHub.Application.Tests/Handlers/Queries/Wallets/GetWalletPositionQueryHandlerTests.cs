@@ -41,6 +41,8 @@ public class GetWalletPositionQueryHandlerTests
         Assert.AreEqual("BTCI11", btci11Position.Ticker);
         Assert.AreEqual(2m, btci11Position.Quantity);
         Assert.AreEqual(9m, btci11Position.MarketPrice);
+        Assert.AreEqual(105m, xpml11Position.AveragePrice);
+        Assert.AreEqual(9.05m, btci11Position.AveragePrice);
         Assert.IsFalse(walletRepository.CreateWasCalled);
         Assert.IsFalse(walletRepository.UpdateWasCalled);
     }

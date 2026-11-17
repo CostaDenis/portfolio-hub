@@ -18,6 +18,7 @@ public class GetWalletAssetPositionQueryHandler(
             asset.Ticker,
             asset.Name,
             wallet.GetCurrentQuantity(asset),
-            asset.MarketPrice.Price.Value);
+            asset.MarketPrice.Price.Value,
+            wallet.GetAveragePriceByAsset(asset).Value);
     }
 }
