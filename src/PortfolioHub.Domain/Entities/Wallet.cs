@@ -131,4 +131,33 @@ public class Wallet(WalletName name) : Entity
 
         dividend.Reverse();
     }
+
+    public Money GetAveragePriceByAsset(Asset asset)
+    {
+        decimal quantity = 0;
+        decimal totalCost = 0;
+        foreach (var transaction in GetTransactions(asset)
+            .Where(x => x.IsReversed == false)
+            .OrderBy(x => x.Date))
+        {
+            if (transaction.IsBuy())
+            {
+                quantity += transaction.Quantity;
+                totalCost += transaction.Quantity * transaction.UnitPrice;
+            }
+            else
+            {
+                var averagePrice = totalCost / quantity;
+                quantity -= transaction.Quantity;
+                totalCost -= transaction.Quantity * averagePrice;
+            }
+
+            if (quantity == 0)
+                totalCost = 0;
+        }
+
+        return quantity == 0
+            ? new Money(0m)
+            : new Money(totalCost / quantity);
+    }
 }

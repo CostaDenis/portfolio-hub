@@ -401,4 +401,57 @@ public class WalletTests
         Assert.AreEqual((Money)correctTotalDividend, totalDividendWallet);
         Assert.HasCount(2, _wallet.Dividends);
     }
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Keep_Average_Price_After_Sell()
+    {
+        _wallet.BuyAsset(_xpml11, (Quantity)10, (Money)100m);
+        _wallet.BuyAsset(_xpml11, (Quantity)10, (Money)200m);
+
+        _wallet.SellAsset(_xpml11, (Quantity)10, (Money)500m);
+        _wallet.BuyAsset(_xpml11, (Quantity)10, (Money)300m);
+
+        Assert.AreEqual((Money)225, _wallet.GetAveragePriceByAsset(_xpml11));
+    }
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Restart_Average_Price_When_Position_Is_Closed()
+    {
+        _wallet.BuyAsset(_xpml11, (Quantity)10, (Money)100m);
+        _wallet.SellAsset(_xpml11, (Quantity)10, (Money)150m);
+        _wallet.BuyAsset(_xpml11, (Quantity)5, (Money)400m);
+
+        Assert.AreEqual((Money)400, _wallet.GetAveragePriceByAsset(_xpml11));
+    }
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Ignore_Reversed_Transactions_In_Average_Price()
+    {
+        _wallet.BuyAsset(_xpml11, (Quantity)10, (Money)100m);
+        _wallet.BuyAsset(_xpml11, (Quantity)10, (Money)300m);
+
+        var lastTransactionId = _wallet.Transactions.Last().Id;
+        _wallet.ReverseTransaction(lastTransactionId);
+
+        Assert.AreEqual((Money)100, _wallet.GetAveragePriceByAsset(_xpml11));
+    }
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Return_Zero_Average_Price_When_Asset_Is_Not_Held()
+        => Assert.AreEqual((Money)0, _wallet.GetAveragePriceByAsset(_xpml11));
+
+    [TestMethod]
+    [TestCategory("Wallet Tests")]
+    public void Should_Calculate_Average_Price_Separately_For_Each_Asset()
+    {
+        _wallet.BuyAsset(_xpml11, (Quantity)10, (Money)100m);
+        _wallet.BuyAsset(_bbas3, (Quantity)200, (Money)20m);
+
+        Assert.AreEqual((Money)100, _wallet.GetAveragePriceByAsset(_xpml11));
+        Assert.AreEqual((Money)20, _wallet.GetAveragePriceByAsset(_bbas3));
+    }
 }
