@@ -352,6 +352,22 @@ public class WalletPage : ComponentBase, IDisposable
             _ => value.ToString("C"),
         };
 
+    protected static string FormatSignedPercent(decimal value)
+        => value switch
+        {
+            > 0 => "+" + value.ToString("P2"),
+            < 0 => "−" + Math.Abs(value).ToString("P2"),
+            _ => value.ToString("P2"),
+        };
+
+    protected static string ResultClass(decimal value)
+        => value switch
+        {
+            > 0 => "text-success",
+            < 0 => "text-danger",
+            _ => "text-muted",
+        };
+
     private IReadOnlyList<AllocationBar.AllocationSlice> BuildAllocation()
     {
         var total = NetWorth;

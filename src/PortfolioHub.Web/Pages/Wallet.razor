@@ -272,14 +272,16 @@
                                 <h2 id="positions-title" class="px-6 pt-6 text-lg font-semibold">Posições</h2>
 
                                 <div class="mt-4 overflow-x-auto">
-                                    <table class="w-full min-w-160 text-sm">
+                                    <table class="w-full min-w-4xl text-sm">
                                         <thead>
                                             <tr class="border-b border-line text-left text-xs uppercase tracking-wider text-muted">
                                                 <th scope="col" class="px-6 py-3 font-medium">Ativo</th>
                                                 <th scope="col" class="px-3 py-3 font-medium">Classe</th>
                                                 <th scope="col" class="px-3 py-3 text-right font-medium">Quantidade</th>
+                                                <th scope="col" class="px-3 py-3 text-right font-medium">Preço médio</th>
                                                 <th scope="col" class="px-3 py-3 text-right font-medium">Preço atual</th>
                                                 <th scope="col" class="px-3 py-3 text-right font-medium">Valor</th>
+                                                <th scope="col" class="px-3 py-3 text-right font-medium">Resultado</th>
                                                 <th scope="col" class="px-6 py-3 text-right font-medium">% da carteira</th>
                                             </tr>
                                         </thead>
@@ -301,8 +303,13 @@
                                                         </span>
                                                     </td>
                                                     <td class="px-3 py-4 text-right tabular-nums">@FormatQuantity(position.Quantity)</td>
+                                                    <td class="px-3 py-4 text-right tabular-nums">@PriceFormatter.Format(position.AveragePrice)</td>
                                                     <td class="px-3 py-4 text-right tabular-nums">@PriceFormatter.Format(position.MarketPrice)</td>
                                                     <td class="px-3 py-4 text-right font-medium tabular-nums">@position.Total.ToString("C")</td>
+                                                    <td class="@ResultClass(position.Result) px-3 py-4 text-right tabular-nums">
+                                                        <p class="font-medium">@FormatSigned(position.Result)</p>
+                                                        <p class="text-xs">@FormatSignedPercent(position.ResultPercent)</p>
+                                                    </td>
                                                     <td class="px-6 py-4 text-right tabular-nums">@share.ToString("P1")</td>
                                                 </tr>
                                             }
@@ -341,10 +348,12 @@
                                                             class="@(transaction.IsReversed ? "bg-line text-muted" : transaction.IsBuy ? "bg-primary/10 text-primary" : "bg-link/10 text-link") mr-2 rounded px-1.5 py-0.5 text-xs font-semibold">
                                                             @(transaction.IsBuy ? "Compra" : "Venda")
                                                         </span>
-                                                        <span class="@(transaction.IsReversed ? "text-muted" : "") font-semibold">@transaction.Ticker</span>
+                                                        <span
+                                                        class="@(transaction.IsReversed ? "text-muted" : "") font-semibold">@transaction.Ticker</span>
                                                         @if (transaction.IsReversed)
                                                         {
-                                                            <span class="ml-2 rounded border border-line px-1.5 py-0.5 text-xs font-medium text-muted">Estornada</span>
+                                                            <span
+                                                            class="ml-2 rounded border border-line px-1.5 py-0.5 text-xs font-medium text-muted">Estornada</span>
                                                         }
                                                     </p>
                                                     <p class="mt-1 text-xs text-muted tabular-nums">
@@ -352,61 +361,65 @@
                                                         @transaction.Date.ToLocalTime().ToString("dd/MM/yyyy")
                                                     </p>
                                                 </div>
-                                                <p class="@(transaction.IsReversed ? "text-muted line-through" : "") shrink-0 text-sm font-medium tabular-nums">@transaction.Total.ToString("C")</p>
-                                            </li>
-                                        }
-                                    </ul>
-                                }
-                            </section>
-
-                            <section class="rounded-xl border border-line bg-surface p-6" aria-labelledby="dividends-title">
-                                <div class="flex items-baseline justify-between gap-4">
-                                    <h2 id="dividends-title" class="text-lg font-semibold">Últimos dividendos</h2>
-                                    @if (dividends.Dividends.Count > 0)
-                                    {
-                                        <a href="wallets/@WalletId/history?type=dividends" aria-label="Ver todos os dividendos"
-                                           class="shrink-0 rounded text-sm font-medium text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-link">
-                                            Ver todos <span aria-hidden="true">→</span>
-                                        </a>
+                                                <p
+                                                    class="@(transaction.IsReversed ? "text-muted line-through" : "") shrink-0 text-sm font-medium tabular-nums">
+                                                    @transaction.Total.ToString("C")</p>
+                                                </li>
+                                            }
+                                        </ul>
                                     }
-                                </div>
+                                </section>
 
-                                @if (dividends.Dividends.Count == 0)
-                                {
-                                    <p class="mt-4 text-sm text-muted">Nenhum dividendo recebido ainda.</p>
-                                }
-                                else
-                                {
-                                    <ul class="mt-4 divide-y divide-line">
-                                        @foreach (var dividend in dividends.Dividends.OrderByDescending(d => d.Date).Take(RecentItems))
+                                <section class="rounded-xl border border-line bg-surface p-6" aria-labelledby="dividends-title">
+                                    <div class="flex items-baseline justify-between gap-4">
+                                        <h2 id="dividends-title" class="text-lg font-semibold">Últimos dividendos</h2>
+                                        @if (dividends.Dividends.Count > 0)
                                         {
-                                            <li class="flex items-center justify-between gap-4 py-3">
-                                                <div class="min-w-0">
-                                                    <p class="text-sm">
-                                                        <span class="@(dividend.IsReversed ? "text-muted" : "") font-semibold">@dividend.Ticker</span>
-                                                        @if (dividend.IsReversed)
-                                                        {
-                                                            <span class="ml-2 rounded border border-line px-1.5 py-0.5 text-xs font-medium text-muted">Estornado</span>
-                                                        }
-                                                    </p>
-                                                    <p class="mt-1 text-xs text-muted tabular-nums">
-                                                        @FormatQuantity(dividend.Quantity) × @PriceFormatter.Format(dividend.ValuePerShare) ·
-                                                        @dividend.Date.ToString("dd/MM/yyyy")
-                                                    </p>
-                                                </div>
-                                                @if (dividend.IsReversed)
-                                                {
-                                                    <p class="shrink-0 text-sm font-medium text-muted line-through tabular-nums">+@dividend.Total.ToString("C")</p>
-                                                }
-                                                else
-                                                {
-                                                    <p class="shrink-0 text-sm font-medium text-success tabular-nums">+@dividend.Total.ToString("C")</p>
-                                                }
-                                            </li>
+                                            <a href="wallets/@WalletId/history?type=dividends" aria-label="Ver todos os dividendos"
+                                               class="shrink-0 rounded text-sm font-medium text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-link">
+                                                Ver todos <span aria-hidden="true">→</span>
+                                            </a>
                                         }
-                                    </ul>
-                                }
-                            </section>
-                        </div>
-                        break;
-                    }
+                                    </div>
+
+                                    @if (dividends.Dividends.Count == 0)
+                                    {
+                                        <p class="mt-4 text-sm text-muted">Nenhum dividendo recebido ainda.</p>
+                                    }
+                                    else
+                                    {
+                                        <ul class="mt-4 divide-y divide-line">
+                                            @foreach (var dividend in dividends.Dividends.OrderByDescending(d => d.Date).Take(RecentItems))
+                                            {
+                                                <li class="flex items-center justify-between gap-4 py-3">
+                                                    <div class="min-w-0">
+                                                        <p class="text-sm">
+                                                            <span class="@(dividend.IsReversed ? "text-muted" : "") font-semibold">@dividend.Ticker</span>
+                                                            @if (dividend.IsReversed)
+                                                            {
+                                                                <span
+                                                                class="ml-2 rounded border border-line px-1.5 py-0.5 text-xs font-medium text-muted">Estornado</span>
+                                                            }
+                                                        </p>
+                                                        <p class="mt-1 text-xs text-muted tabular-nums">
+                                                            @FormatQuantity(dividend.Quantity) × @PriceFormatter.Format(dividend.ValuePerShare) ·
+                                                            @dividend.Date.ToString("dd/MM/yyyy")
+                                                        </p>
+                                                    </div>
+                                                    @if (dividend.IsReversed)
+                                                    {
+                                                        <p class="shrink-0 text-sm font-medium text-muted line-through tabular-nums">
+                                                            +@dividend.Total.ToString("C")</p>
+                                                        }
+                                                else
+                                                        {
+                                                            <p class="shrink-0 text-sm font-medium text-success tabular-nums">+@dividend.Total.ToString("C")</p>
+                                                        }
+                                                    </li>
+                                                }
+                                            </ul>
+                                        }
+                                    </section>
+                                </div>
+                                break;
+                            }
