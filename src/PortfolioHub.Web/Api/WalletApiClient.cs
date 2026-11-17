@@ -63,4 +63,12 @@ public class WalletApiClient(HttpClient client)
     public async Task<ApiResult> SellAssetAsync(Guid walletId, TradeAssetRequest request,
         CancellationToken cancellationToken = default)
         => await PostAsync($"v1/wallets/{walletId}/assets/sell", request, cancellationToken);
+
+    public async Task<ApiResult> ReverseTransactionAsync(Guid walletId, Guid transactionId,
+        CancellationToken cancellationToken = default)
+        => await PostWithoutBodyAsync($"v1/wallets/{walletId}/transactions/{transactionId}/reverse", cancellationToken);
+
+    public async Task<ApiResult> ReverseDividendAsync(Guid walletId, Guid dividendId,
+        CancellationToken cancellationToken = default)
+        => await PostWithoutBodyAsync($"v1/wallets/{walletId}/dividends/{dividendId}/reverse", cancellationToken);
 }

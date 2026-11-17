@@ -27,6 +27,12 @@ public interface IWalletApiClient
     Task<ApiResult> ReceiveDividendAsync(Guid walletId, ReceiveDividendRequest request,
         CancellationToken cancellationToken = default);
 
+    Task<ApiResult> ReverseTransactionAsync(Guid walletId, Guid transactionId,
+        CancellationToken cancellationToken = default);
+
+    Task<ApiResult> ReverseDividendAsync(Guid walletId, Guid dividendId,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<WalletPositionResponse>> GetPositionsAsync(Guid walletId,
         CancellationToken cancellationToken = default);
 

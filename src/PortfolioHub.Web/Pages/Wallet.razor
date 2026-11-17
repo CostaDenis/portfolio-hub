@@ -338,17 +338,21 @@
                                                 <div class="min-w-0">
                                                     <p class="text-sm">
                                                         <span
-                                                            class="@(transaction.IsBuy ? "bg-primary/10 text-primary" : "bg-link/10 text-link") mr-2 rounded px-1.5 py-0.5 text-xs font-semibold">
+                                                            class="@(transaction.IsReversed ? "bg-line text-muted" : transaction.IsBuy ? "bg-primary/10 text-primary" : "bg-link/10 text-link") mr-2 rounded px-1.5 py-0.5 text-xs font-semibold">
                                                             @(transaction.IsBuy ? "Compra" : "Venda")
                                                         </span>
-                                                        <span class="font-semibold">@transaction.Ticker</span>
+                                                        <span class="@(transaction.IsReversed ? "text-muted" : "") font-semibold">@transaction.Ticker</span>
+                                                        @if (transaction.IsReversed)
+                                                        {
+                                                            <span class="ml-2 rounded border border-line px-1.5 py-0.5 text-xs font-medium text-muted">Estornada</span>
+                                                        }
                                                     </p>
                                                     <p class="mt-1 text-xs text-muted tabular-nums">
                                                         @FormatQuantity(transaction.Quantity) × @PriceFormatter.Format(transaction.UnitPrice) ·
                                                         @transaction.Date.ToLocalTime().ToString("dd/MM/yyyy")
                                                     </p>
                                                 </div>
-                                                <p class="shrink-0 text-sm font-medium tabular-nums">@transaction.Total.ToString("C")</p>
+                                                <p class="@(transaction.IsReversed ? "text-muted line-through" : "") shrink-0 text-sm font-medium tabular-nums">@transaction.Total.ToString("C")</p>
                                             </li>
                                         }
                                     </ul>
@@ -378,13 +382,26 @@
                                         {
                                             <li class="flex items-center justify-between gap-4 py-3">
                                                 <div class="min-w-0">
-                                                    <p class="text-sm font-semibold">@dividend.Ticker</p>
+                                                    <p class="text-sm">
+                                                        <span class="@(dividend.IsReversed ? "text-muted" : "") font-semibold">@dividend.Ticker</span>
+                                                        @if (dividend.IsReversed)
+                                                        {
+                                                            <span class="ml-2 rounded border border-line px-1.5 py-0.5 text-xs font-medium text-muted">Estornado</span>
+                                                        }
+                                                    </p>
                                                     <p class="mt-1 text-xs text-muted tabular-nums">
                                                         @FormatQuantity(dividend.Quantity) × @PriceFormatter.Format(dividend.ValuePerShare) ·
                                                         @dividend.Date.ToString("dd/MM/yyyy")
                                                     </p>
                                                 </div>
-                                                <p class="shrink-0 text-sm font-medium text-success tabular-nums">+@dividend.Total.ToString("C")</p>
+                                                @if (dividend.IsReversed)
+                                                {
+                                                    <p class="shrink-0 text-sm font-medium text-muted line-through tabular-nums">+@dividend.Total.ToString("C")</p>
+                                                }
+                                                else
+                                                {
+                                                    <p class="shrink-0 text-sm font-medium text-success tabular-nums">+@dividend.Total.ToString("C")</p>
+                                                }
                                             </li>
                                         }
                                     </ul>

@@ -74,4 +74,12 @@ public abstract class BaseApiClient(HttpClient client)
 
         return await ReadResultAsync(response, cancellationToken);
     }
+
+    // Ações em que a rota já identifica tudo, como o estorno.
+    protected async Task<ApiResult> PostWithoutBodyAsync(string uri, CancellationToken cancellationToken)
+    {
+        using var response = await _client.PostAsync(uri, null, cancellationToken);
+
+        return await ReadResultAsync(response, cancellationToken);
+    }
 }

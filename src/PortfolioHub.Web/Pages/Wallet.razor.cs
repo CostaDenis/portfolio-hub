@@ -76,14 +76,16 @@ public class WalletPage : ComponentBase, IDisposable
     protected bool savingOperation;
 
     protected decimal NetWorth => positions.Sum(p => p.Total);
-    protected decimal NetInvested => transactions.Sum(t => t.IsBuy ? t.Total : -t.Total);
+    protected decimal NetInvested => transactions
+        .Where(t => !t.IsReversed)
+        .Sum(t => t.IsBuy ? t.Total : -t.Total);
 
     // Patrimônio atual + o que já foi resgatado em vendas − o que foi gasto em compras.
     protected decimal Result => NetWorth - NetInvested;
 
     protected string AssetCountLabel => positions.Count == 1 ? "1 ativo em carteira" : $"{positions.Count} ativos em carteira";
 
-    protected string DividendCountLabel => dividends.Dividends.Count switch
+    protected string DividendCountLabel => dividends.Dividends.Count(d => !d.IsReversed) switch
     {
         0 => "Nenhum pagamento ainda",
         1 => "1 pagamento",
