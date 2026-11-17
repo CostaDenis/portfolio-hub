@@ -27,9 +27,24 @@ public class GlobalExceptionHandler : IExceptionHandler
                 "Ativo não encontrado",
                 exception.Message);
 
+        if (exception is TransactionNotFoundException)
+            return await WriteProblemAsync(
+                httpContext,
+                StatusCodes.Status404NotFound,
+                "Transação não encontrada",
+                exception.Message);
+
+        if (exception is DividendNotFoundException)
+            return await WriteProblemAsync(
+                httpContext,
+                StatusCodes.Status404NotFound,
+                "Dividendo não encontrado",
+                exception.Message);
+
         if (exception is InsufficientBalanceException
             or InsufficientAssetQuantityException
-            or TickerAlreadyUsedException)
+            or TickerAlreadyUsedException
+            or AlreadyReversedException)
             return await WriteProblemAsync(
                 httpContext,
                 StatusCodes.Status409Conflict,

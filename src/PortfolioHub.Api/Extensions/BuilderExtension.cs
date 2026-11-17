@@ -47,6 +47,8 @@ public static class BuilderExtension
         builder.Services.AddScoped<GetWalletDividendsQueryHandler>();
         builder.Services.AddScoped<GetWalletPositionQueryHandler>();
         builder.Services.AddScoped<GetWalletTransactionsQueryHandler>();
+        builder.Services.AddScoped<ReverseDividendCommandHandler>();
+        builder.Services.AddScoped<ReverseTransactionCommandHandler>();
 
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();

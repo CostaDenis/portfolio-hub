@@ -38,6 +38,8 @@ public static class Endpoint
             .MapEndpoint<GetWalletPositionEndpoint>()
             .MapEndpoint<GetWalletTransactionsEndpoint>()
             .MapEndpoint<ReceiveDividendEndpoint>()
+            .MapEndpoint<ReverseDividendEndpoint>()
+            .MapEndpoint<ReverseTransactionEndpoint>()
             .MapEndpoint<SellAssetEndpoint>()
             .MapEndpoint<UpdateWalletNameEndpoint>();
     }

@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using PortfolioHub.Api.Contracts.Wallets;
 using PortfolioHub.Domain.Entities;
