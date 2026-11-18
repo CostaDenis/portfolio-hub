@@ -26,6 +26,12 @@ public class AssetRepository(AppDbContext context) : IAssetRepository
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task UpdateRangeAsync(IEnumerable<Asset> assets, CancellationToken cancellationToken)
+    {
+        context.Assets.UpdateRange(assets);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<bool> ExistsByTickerAsync(Ticker ticker, Guid? excludedId, CancellationToken cancellationToken)
     {
         string normalizedTicker = ticker;
@@ -34,4 +40,5 @@ public class AssetRepository(AppDbContext context) : IAssetRepository
             .AnyAsync(x => x.Ticker == normalizedTicker
                 && x.Id != excludedId, cancellationToken);
     }
+
 }

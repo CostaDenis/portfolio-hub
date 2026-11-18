@@ -9,6 +9,7 @@ public interface IAssetRepository
     Task<Asset?> GetByIdAsync(Guid assetId, CancellationToken cancellationToken);
     Task CreateAsync(Asset asset, CancellationToken cancellationToken);
     Task UpdateAsync(Asset asset, CancellationToken cancellationToken);
+    Task UpdateRangeAsync(IEnumerable<Asset> assets, CancellationToken cancellationToken);
     Task<bool> ExistsByTickerAsync(Ticker ticker, Guid? excludedId,
         CancellationToken cancellationToken);
 }

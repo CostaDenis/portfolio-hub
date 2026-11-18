@@ -31,6 +31,8 @@ public class FakeAssetRepository : IAssetRepository
     public Asset? CreatedAsset { get; private set; }
     public bool UpdateWasCalled { get; private set; }
     public Asset? UpdatedAsset { get; private set; }
+    public bool UpdateRangeWasCalled { get; private set; }
+    public IReadOnlyList<Asset> UpdatedAssets { get; private set; } = [];
 
     public Task<List<Asset>> GetAllAssets(CancellationToken cancellationToken)
         => Task.FromResult(_assets.ToList());
@@ -59,4 +61,12 @@ public class FakeAssetRepository : IAssetRepository
         => await Task.FromResult(
             _assets.Any(asset => asset.Ticker.Equals(ticker)
                 && asset.Id != excludedId));
+
+    public Task UpdateRangeAsync(IEnumerable<Asset> assets, CancellationToken cancellationToken)
+    {
+        UpdateRangeWasCalled = true;
+        UpdatedAssets = assets.ToList();
+
+        return Task.CompletedTask;
+    }
 }
