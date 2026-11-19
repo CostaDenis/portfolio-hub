@@ -6,11 +6,26 @@ using PortfolioHub.Infrastructure.Providers.Models;
 
 namespace PortfolioHub.Infrastructure.Providers;
 
-public class BrapiPriceProvider(HttpClient client) : IMarketPriceProvider
+public class BrapiPriceProvider(HttpClient client, TimeProvider timeProvider) : IMarketPriceProvider
 {
+
+    private static readonly TimeOnly MarketOpen = new(10, 0);
+    private static readonly TimeOnly MarketClose = new(18, 30);
+    private static readonly TimeZoneInfo BrasiliaTime =
+        TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
 
     public bool Supports(EAssetType type)
         => type is EAssetType.Stock or EAssetType.RealStateFund;
+
+    public bool IsAvailableNow()
+    {
+        var now = TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), BrasiliaTime);
+        var time = TimeOnly.FromDateTime(now.DateTime);
+
+        return now.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday)
+            && time >= MarketOpen
+            && time <= MarketClose;
+    }
 
     public async Task<IReadOnlyDictionary<string, decimal>> GetPricesAsync(IReadOnlyCollection<string> tickers, CancellationToken cancellationToken)
     {

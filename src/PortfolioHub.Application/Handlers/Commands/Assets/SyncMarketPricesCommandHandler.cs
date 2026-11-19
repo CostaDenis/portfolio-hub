@@ -18,6 +18,7 @@ public class SyncMarketPricesCommandHandler(IAssetRepository assetRepository,
         var assets = await assetRepository.GetAllAssets(cancellationToken);
 
         var notFound = 0;
+        var skipped = 0;
         List<Asset> updatedAssets = [];
 
         foreach (var assetGroup in assets.GroupBy(a => a.Type))
@@ -27,6 +28,12 @@ public class SyncMarketPricesCommandHandler(IAssetRepository assetRepository,
             if (provider is null)
             {
                 notFound += assetGroup.Count();
+                continue;
+            }
+
+            if (!provider.IsAvailableNow())
+            {
+                skipped += assetGroup.Count();
                 continue;
             }
 
@@ -62,6 +69,6 @@ public class SyncMarketPricesCommandHandler(IAssetRepository assetRepository,
         if (updatedAssets.Count > 0)
             await assetRepository.UpdateRangeAsync(updatedAssets, cancellationToken);
 
-        return new SyncMarketPricesResultDTO(updatedAssets.Count, notFound);
+        return new SyncMarketPricesResultDTO(updatedAssets.Count, notFound, skipped);
     }
 }

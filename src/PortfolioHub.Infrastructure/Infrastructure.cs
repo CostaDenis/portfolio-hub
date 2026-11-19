@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using PortfolioHub.Application.Providers;
 using PortfolioHub.Application.Repositories;
 using PortfolioHub.Infrastructure.Data;
@@ -30,6 +31,8 @@ public static class Infrastructure
             client.BaseAddress = new Uri("https://brapi.dev/");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configuration["Brapi:Token"]);
         });
+
+        services.TryAddSingleton(TimeProvider.System);
 
         return services;
     }

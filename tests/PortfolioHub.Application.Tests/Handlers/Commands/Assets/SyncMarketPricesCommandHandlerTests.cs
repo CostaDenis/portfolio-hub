@@ -99,4 +99,27 @@ public class SyncMarketPricesCommandHandlerTests
         Assert.AreEqual(2, result.NotFound);
         Assert.IsFalse(repository.UpdateRangeWasCalled);
     }
+
+    [TestMethod]
+    [TestCategory("SyncMarketPricesCommandHandler Tests")]
+    public async Task Should_Skip_Assets_When_Provider_Is_Unavailable()
+    {
+        var repository = new FakeAssetRepository([_btc, _eth]);
+        var provider = new FakeMarketPriceProvider(EAssetType.Cryptocurrency,
+            prices: new Dictionary<string, decimal>
+            {
+                ["BTC"] = 367000m,
+                ["ETH"] = 10280m,
+            },
+        isAvailableNow: false);
+
+        var handler = new SyncMarketPricesCommandHandler(repository, [provider], NullLogger<SyncMarketPricesCommandHandler>.Instance);
+
+        var result = await handler.HandleAsync(new SyncMarketPricesCommand(), CancellationToken.None);
+
+        Assert.AreEqual(0, result.Updated);
+        Assert.AreEqual(0, result.NotFound);
+        Assert.AreEqual(2, result.Skipped);
+        Assert.IsFalse(repository.UpdateRangeWasCalled);
+    }
 }

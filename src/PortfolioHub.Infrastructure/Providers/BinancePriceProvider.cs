@@ -12,6 +12,8 @@ public class BinancePriceProvider(HttpClient client) : IMarketPriceProvider
     private const string QuoteCurrency = "BRL";
 
     public bool Supports(EAssetType type) => type == EAssetType.Cryptocurrency;
+    public bool IsAvailableNow()
+        => true;
 
     public async Task<IReadOnlyDictionary<string, decimal>> GetPricesAsync(IReadOnlyCollection<string> tickers, CancellationToken cancellationToken)
     {
@@ -37,4 +39,5 @@ public class BinancePriceProvider(HttpClient client) : IMarketPriceProvider
 
         return result;
     }
+
 }

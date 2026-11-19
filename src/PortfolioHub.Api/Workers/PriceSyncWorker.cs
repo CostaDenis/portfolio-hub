@@ -33,8 +33,9 @@ public class PriceSyncWorker(
 
             var result = await handler.HandleAsync(new SyncMarketPricesCommand(), cancellationToken);
 
-            logger.LogInformation("Preços sincronizados: {Updated} atualizados, {NotFound} não encontrados",
-                result.Updated, result.NotFound);
+            logger.LogInformation("Preços sincronizados: {Updated} atualizados, {NotFound} não encontrados, {Skipped} pulados",
+                result.Updated, result.NotFound, result.Skipped);
+
 
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
