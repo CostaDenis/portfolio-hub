@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using PortfolioHub.Api.Options;
 using PortfolioHub.Api.Tests.Providers;
 using PortfolioHub.Application.Providers;
 using PortfolioHub.Infrastructure.Data;
@@ -28,6 +29,8 @@ public sealed class PortfolioHubApiFactory(string connectionString)
 
             services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
             services.AddSingleton<IMarketPriceProvider>(new FakeMarketPriceProvider());
+
+            services.Configure<PriceSyncOptions>(options => options.Enabled = false);
         });
     }
 }

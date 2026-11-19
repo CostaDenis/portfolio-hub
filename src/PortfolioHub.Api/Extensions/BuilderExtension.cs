@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 using PortfolioHub.Api.Exceptions;
+using PortfolioHub.Api.Options;
+using PortfolioHub.Api.Workers;
 using PortfolioHub.Application.Handlers.Commands.Assets;
 using PortfolioHub.Application.Handlers.Commands.Wallets;
 using PortfolioHub.Application.Handlers.Queries.Assets;
@@ -53,6 +55,10 @@ public static class BuilderExtension
 
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
+
+        //Sincronização de preços
+        builder.Services.Configure<PriceSyncOptions>(builder.Configuration.GetSection("PriceSync"));
+        builder.Services.AddHostedService<PriceSyncWorker>();
     }
 
     public const string WebCorsPolicy = "PortfolioHubWeb";
