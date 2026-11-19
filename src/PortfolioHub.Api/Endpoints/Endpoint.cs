@@ -19,16 +19,15 @@ public static class Endpoint
 
         endpoints.MapGroup("v1/assets")
             .WithTags("Assets")
-            // .RequireAuthorization()
             .MapEndpoint<CreateAssetEndpoint>()
             .MapEndpoint<GetAssetByIdEndpoint>()
             .MapEndpoint<GetAssetsEndpoint>()
+            .MapEndpoint<SyncMarketPricesEndpoint>()
             .MapEndpoint<UpdateAssetEndpoint>()
             .MapEndpoint<UpdateMarketPriceEndpoint>();
 
         endpoints.MapGroup("v1/wallets")
             .WithTags("Wallets")
-            // .RequireAuthorization()
             .MapEndpoint<BuyAssetEndpoint>()
             .MapEndpoint<CreateWalletEndpoint>()
             .MapEndpoint<GetWalletAssetPositionEndpoint>()

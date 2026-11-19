@@ -31,6 +31,7 @@ public static class BuilderExtension
 
         //Application services
         builder.Services.AddScoped<CreateAssetCommandHandler>();
+        builder.Services.AddScoped<SyncMarketPricesCommandHandler>();
         builder.Services.AddScoped<UpdateAssetCommandHandler>();
         builder.Services.AddScoped<UpdateMarketPriceCommandHandler>();
         builder.Services.AddScoped<GetAssetByIdQueryHandler>();
