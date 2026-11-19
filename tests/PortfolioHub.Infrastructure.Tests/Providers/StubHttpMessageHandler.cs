@@ -4,21 +4,30 @@ using System.Text;
 namespace PortfolioHub.Infrastructure.Tests.Providers;
 
 //simula a Internet
-public class StubHttpMessageHandler(string json, HttpStatusCode statusCode = HttpStatusCode.OK)
+public class StubHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> respond)
     : HttpMessageHandler
 {
-    public HttpRequestMessage? LastRequest { get; private set; }
-
-    protected override Task<HttpResponseMessage> SendAsync(
-        HttpRequestMessage request, CancellationToken cancellationToken)
+    //todaa requisição recebe a mesma resposta
+    public StubHttpMessageHandler(string json, HttpStatusCode statusCode = HttpStatusCode.OK)
+        : this(_ => JsonResponse(json, statusCode))
     {
-        LastRequest = request;
+    }
 
-        var response = new HttpResponseMessage(statusCode)
+    public List<HttpRequestMessage> Requests { get; } = [];
+
+    public HttpRequestMessage? LastRequest => Requests.LastOrDefault();
+
+    public static HttpResponseMessage JsonResponse(string json, HttpStatusCode statusCode = HttpStatusCode.OK)
+        => new(statusCode)
         {
             Content = new StringContent(json, Encoding.UTF8, "application/json")
         };
 
-        return Task.FromResult(response);
+    protected override Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        Requests.Add(request);
+
+        return Task.FromResult(respond(request));
     }
 }
