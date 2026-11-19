@@ -5,7 +5,7 @@ namespace PortfolioHub.Api.Tests.Providers;
 
 public class FakeMarketPriceProvider : IMarketPriceProvider
 {
-    public EAssetType AssetType => EAssetType.Cryptocurrency;
+    public bool Supports(EAssetType type) => type == EAssetType.Cryptocurrency;
     public const decimal BtcPrice = 367826m;
 
     public Task<IReadOnlyDictionary<string, decimal>> GetPricesAsync(IReadOnlyCollection<string> tickers, CancellationToken cancellationToken)

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using PortfolioHub.Application.Commands.Assets;
 using PortfolioHub.Application.DTOs;
 using PortfolioHub.Application.Providers;
@@ -8,7 +9,8 @@ using PortfolioHub.Domain.ValueObjects;
 namespace PortfolioHub.Application.Handlers.Commands.Assets;
 
 public class SyncMarketPricesCommandHandler(IAssetRepository assetRepository,
-    IEnumerable<IMarketPriceProvider> providers)
+    IEnumerable<IMarketPriceProvider> providers,
+    ILogger<SyncMarketPricesCommandHandler> logger)
 {
 
     public async Task<SyncMarketPricesResultDTO> HandleAsync(SyncMarketPricesCommand command, CancellationToken cancellationToken)
@@ -20,7 +22,7 @@ public class SyncMarketPricesCommandHandler(IAssetRepository assetRepository,
 
         foreach (var assetGroup in assets.GroupBy(a => a.Type))
         {
-            var provider = providers.FirstOrDefault(p => p.AssetType == assetGroup.Key);
+            var provider = providers.FirstOrDefault(p => p.Supports(assetGroup.Key));
 
             if (provider is null)
             {
@@ -34,8 +36,9 @@ public class SyncMarketPricesCommandHandler(IAssetRepository assetRepository,
                 var tickers = assetGroup.Select(a => a.Ticker.Value).ToList();
                 prices = await provider.GetPricesAsync(tickers, cancellationToken);
             }
-            catch (HttpRequestException)
+            catch (HttpRequestException exception)
             {
+                logger.LogWarning(exception, "Falha ao buscar preços de {AssetType}", assetGroup.Key);
                 notFound += assetGroup.Count();
                 continue;
             }

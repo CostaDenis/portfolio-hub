@@ -4,7 +4,7 @@ namespace PortfolioHub.Application.Providers;
 
 public interface IMarketPriceProvider
 {
-    EAssetType AssetType { get; }
+    bool Supports(EAssetType type);
 
     //ticker->preco
     Task<IReadOnlyDictionary<string, decimal>> GetPricesAsync

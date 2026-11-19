@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,7 +23,13 @@ public static class Infrastructure
         services.AddScoped<IWalletRepository, WalletRepository>();
 
         services.AddHttpClient<IMarketPriceProvider, BinancePriceProvider>
-            (client => client.BaseAddress = new Uri("https://api.binance.com/"));
+            ("Binance", client => client.BaseAddress = new Uri("https://api.binance.com/"));
+
+        services.AddHttpClient<IMarketPriceProvider, BrapiPriceProvider>("Brapi", client =>
+        {
+            client.BaseAddress = new Uri("https://brapi.dev/");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configuration["Brapi:Token"]);
+        });
 
         return services;
     }

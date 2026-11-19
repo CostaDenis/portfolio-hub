@@ -6,7 +6,7 @@ namespace PortfolioHub.Application.Tests.Providers;
 public class FakeMarketPriceProvider(EAssetType assetType, bool shouldFail = false,
     IReadOnlyDictionary<string, decimal>? prices = null) : IMarketPriceProvider
 {
-    public EAssetType AssetType => assetType;
+    public bool Supports(EAssetType type) => type == assetType;
 
     public Task<IReadOnlyDictionary<string, decimal>> GetPricesAsync(IReadOnlyCollection<string> tickers, CancellationToken cancellationToken)
     {

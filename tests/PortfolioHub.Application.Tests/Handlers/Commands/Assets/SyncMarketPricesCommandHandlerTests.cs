@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using PortfolioHub.Application.Commands.Assets;
 using PortfolioHub.Application.Handlers.Commands.Assets;
 using PortfolioHub.Application.Tests.Providers;
@@ -31,7 +32,7 @@ public class SyncMarketPricesCommandHandlerTests
                 ["BTC"] = 367000m,
                 ["ETH"] = 10280m,
             });
-        var handler = new SyncMarketPricesCommandHandler(repository, [provider]);
+        var handler = new SyncMarketPricesCommandHandler(repository, [provider], NullLogger<SyncMarketPricesCommandHandler>.Instance);
 
         var result = await handler.HandleAsync(new SyncMarketPricesCommand(), CancellationToken.None);
 
@@ -54,7 +55,7 @@ public class SyncMarketPricesCommandHandlerTests
                 ["BTC"] = 367000m,
                 ["BBAS3"] = 99m //fake
             });
-        var handler = new SyncMarketPricesCommandHandler(repository, [provider]);
+        var handler = new SyncMarketPricesCommandHandler(repository, [provider], NullLogger<SyncMarketPricesCommandHandler>.Instance);
 
         var result = await handler.HandleAsync(new SyncMarketPricesCommand(), CancellationToken.None);
 
@@ -74,7 +75,7 @@ public class SyncMarketPricesCommandHandlerTests
             ["BTC"] = 367000m,
             //API nao conhece o ETH
         });
-        var handler = new SyncMarketPricesCommandHandler(repository, [provider]);
+        var handler = new SyncMarketPricesCommandHandler(repository, [provider], NullLogger<SyncMarketPricesCommandHandler>.Instance);
 
         var result = await handler.HandleAsync(new SyncMarketPricesCommand(), CancellationToken.None);
 
@@ -90,7 +91,7 @@ public class SyncMarketPricesCommandHandlerTests
     {
         var repository = new FakeAssetRepository([_btc, _eth]);
         var provider = new FakeMarketPriceProvider(EAssetType.Cryptocurrency, shouldFail: true);
-        var handler = new SyncMarketPricesCommandHandler(repository, [provider]);
+        var handler = new SyncMarketPricesCommandHandler(repository, [provider], NullLogger<SyncMarketPricesCommandHandler>.Instance);
 
         var result = await handler.HandleAsync(new SyncMarketPricesCommand(), CancellationToken.None);
 
