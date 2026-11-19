@@ -10,8 +10,11 @@ namespace PortfolioHub.Application.Handlers.Commands.Assets;
 
 public class SyncMarketPricesCommandHandler(IAssetRepository assetRepository,
     IEnumerable<IMarketPriceProvider> providers,
+    TimeProvider timeProvider,
     ILogger<SyncMarketPricesCommandHandler> logger)
 {
+
+    private static readonly TimeSpan RecentUpdateWindow = TimeSpan.FromMinutes(15);
 
     public async Task<SyncMarketPricesResultDTO> HandleAsync(SyncMarketPricesCommand command, CancellationToken cancellationToken)
     {
@@ -37,20 +40,30 @@ public class SyncMarketPricesCommandHandler(IAssetRepository assetRepository,
                 continue;
             }
 
+            var now = timeProvider.GetUtcNow().UtcDateTime;
+            var assetsToSync = command.Force
+                ? assetGroup.ToList()
+                : assetGroup.Where(a => now - a.MarketPrice.LastUpdate >= RecentUpdateWindow).ToList();
+
+            skipped += assetGroup.Count() - assetsToSync.Count;
+
+            if (assetsToSync.Count == 0)
+                continue;
+
             IReadOnlyDictionary<string, decimal> prices;
             try
             {
-                var tickers = assetGroup.Select(a => a.Ticker.Value).ToList();
+                var tickers = assetsToSync.Select(a => a.Ticker.Value).ToList();
                 prices = await provider.GetPricesAsync(tickers, cancellationToken);
             }
             catch (HttpRequestException exception)
             {
                 logger.LogWarning(exception, "Falha ao buscar preços de {AssetType}", assetGroup.Key);
-                notFound += assetGroup.Count();
+                notFound += assetsToSync.Count;
                 continue;
             }
 
-            foreach (var asset in assetGroup)
+            foreach (var asset in assetsToSync)
             {
                 if (!prices.TryGetValue(asset.Ticker.Value, out var price)
                     || price <= 0)

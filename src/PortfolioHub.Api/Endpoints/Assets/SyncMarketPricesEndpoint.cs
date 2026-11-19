@@ -19,7 +19,7 @@ public class SyncMarketPricesEndpoint : IEndpoint
         CancellationToken cancellationToken
     )
     {
-        var result = await handler.HandleAsync(new SyncMarketPricesCommand(), cancellationToken);
+        var result = await handler.HandleAsync(new SyncMarketPricesCommand(true), cancellationToken);
 
         return Results.Ok(result);
     }

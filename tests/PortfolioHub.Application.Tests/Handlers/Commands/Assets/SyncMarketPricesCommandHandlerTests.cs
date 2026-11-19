@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Time.Testing;
 using PortfolioHub.Application.Commands.Assets;
 using PortfolioHub.Application.Handlers.Commands.Assets;
 using PortfolioHub.Application.Tests.Providers;
@@ -12,6 +13,8 @@ namespace PortfolioHub.Application.Tests.Handlers.Commands.Assets;
 [TestClass]
 public class SyncMarketPricesCommandHandlerTests
 {
+    private readonly FakeTimeProvider _time = new(DateTimeOffset.UtcNow.AddHours(1));
+
     private readonly Asset _btc = new(new AssetName("Bitcoin"), new Ticker("BTC"),
         EAssetType.Cryptocurrency, new MarketPrice(330000m));
 
@@ -32,7 +35,8 @@ public class SyncMarketPricesCommandHandlerTests
                 ["BTC"] = 367000m,
                 ["ETH"] = 10280m,
             });
-        var handler = new SyncMarketPricesCommandHandler(repository, [provider], NullLogger<SyncMarketPricesCommandHandler>.Instance);
+        var handler = new SyncMarketPricesCommandHandler(repository, [provider], _time,
+            NullLogger<SyncMarketPricesCommandHandler>.Instance);
 
         var result = await handler.HandleAsync(new SyncMarketPricesCommand(), CancellationToken.None);
 
@@ -55,7 +59,8 @@ public class SyncMarketPricesCommandHandlerTests
                 ["BTC"] = 367000m,
                 ["BBAS3"] = 99m //fake
             });
-        var handler = new SyncMarketPricesCommandHandler(repository, [provider], NullLogger<SyncMarketPricesCommandHandler>.Instance);
+        var handler = new SyncMarketPricesCommandHandler(repository, [provider], _time,
+            NullLogger<SyncMarketPricesCommandHandler>.Instance);
 
         var result = await handler.HandleAsync(new SyncMarketPricesCommand(), CancellationToken.None);
 
@@ -75,7 +80,8 @@ public class SyncMarketPricesCommandHandlerTests
             ["BTC"] = 367000m,
             //API nao conhece o ETH
         });
-        var handler = new SyncMarketPricesCommandHandler(repository, [provider], NullLogger<SyncMarketPricesCommandHandler>.Instance);
+        var handler = new SyncMarketPricesCommandHandler(repository, [provider], _time,
+            NullLogger<SyncMarketPricesCommandHandler>.Instance);
 
         var result = await handler.HandleAsync(new SyncMarketPricesCommand(), CancellationToken.None);
 
@@ -91,7 +97,8 @@ public class SyncMarketPricesCommandHandlerTests
     {
         var repository = new FakeAssetRepository([_btc, _eth]);
         var provider = new FakeMarketPriceProvider(EAssetType.Cryptocurrency, shouldFail: true);
-        var handler = new SyncMarketPricesCommandHandler(repository, [provider], NullLogger<SyncMarketPricesCommandHandler>.Instance);
+        var handler = new SyncMarketPricesCommandHandler(repository, [provider], _time,
+            NullLogger<SyncMarketPricesCommandHandler>.Instance);
 
         var result = await handler.HandleAsync(new SyncMarketPricesCommand(), CancellationToken.None);
 
@@ -113,7 +120,8 @@ public class SyncMarketPricesCommandHandlerTests
             },
         isAvailableNow: false);
 
-        var handler = new SyncMarketPricesCommandHandler(repository, [provider], NullLogger<SyncMarketPricesCommandHandler>.Instance);
+        var handler = new SyncMarketPricesCommandHandler(repository, [provider], _time,
+            NullLogger<SyncMarketPricesCommandHandler>.Instance);
 
         var result = await handler.HandleAsync(new SyncMarketPricesCommand(), CancellationToken.None);
 
@@ -121,5 +129,55 @@ public class SyncMarketPricesCommandHandlerTests
         Assert.AreEqual(0, result.NotFound);
         Assert.AreEqual(2, result.Skipped);
         Assert.IsFalse(repository.UpdateRangeWasCalled);
+    }
+
+    [TestMethod]
+    [TestCategory("SyncMarketPricesCommandHandler Tests")]
+    public async Task Should_Skip_Recently_Updated_Assets()
+    {
+        var repository = new FakeAssetRepository([_btc, _eth]);
+        var provider = new FakeMarketPriceProvider(EAssetType.Cryptocurrency,
+            prices: new Dictionary<string, decimal>
+            {
+                ["BTC"] = 367000m,
+                ["ETH"] = 10280m,
+            },
+        isAvailableNow: true);
+
+        var time = new FakeTimeProvider(new DateTimeOffset(DateTime.UtcNow));
+        var handler = new SyncMarketPricesCommandHandler(repository, [provider], time,
+            NullLogger<SyncMarketPricesCommandHandler>.Instance);
+
+        var result = await handler.HandleAsync(new SyncMarketPricesCommand(), CancellationToken.None);
+
+        Assert.AreEqual(0, result.Updated);
+        Assert.AreEqual(0, result.NotFound);
+        Assert.AreEqual(2, result.Skipped);
+        Assert.IsFalse(repository.UpdateRangeWasCalled);
+    }
+
+    [TestMethod]
+    [TestCategory("SyncMarketPricesCommandHandler Tests")]
+    public async Task Should_Update_Recently_Updated_Assets_When_Forced()
+    {
+        var repository = new FakeAssetRepository([_btc, _eth]);
+        var provider = new FakeMarketPriceProvider(EAssetType.Cryptocurrency,
+            prices: new Dictionary<string, decimal>
+            {
+                ["BTC"] = 367000m,
+                ["ETH"] = 10280m,
+            },
+        isAvailableNow: true);
+
+        var time = new FakeTimeProvider(new DateTimeOffset(DateTime.UtcNow));
+        var handler = new SyncMarketPricesCommandHandler(repository, [provider], time,
+            NullLogger<SyncMarketPricesCommandHandler>.Instance);
+
+        var result = await handler.HandleAsync(new SyncMarketPricesCommand(true), CancellationToken.None);
+
+        Assert.AreEqual(2, result.Updated);
+        Assert.AreEqual(0, result.NotFound);
+        Assert.AreEqual(0, result.Skipped);
+        Assert.IsTrue(repository.UpdateRangeWasCalled);
     }
 }
