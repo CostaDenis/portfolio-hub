@@ -16,4 +16,7 @@ public interface IAssetApiClient
 
     Task<ApiResult> UpdateMarketPriceAsync(Guid assetId, decimal price,
         CancellationToken cancellationToken = default);
+
+    Task<ApiResult<SyncMarketPricesResponse>> SyncMarketPricesAsync(bool force,
+        CancellationToken cancellationToken = default);
 }

@@ -26,7 +26,7 @@ public class SyncMarketPricesEndpointTests : ApiTestBase
             await createContext.SaveChangesAsync(CancellationToken.None);
         }
 
-        using var response = await Client.PostAsync("v1/assets/prices/sync", null, CancellationToken.None);
+        using var response = await Client.PostAsync("v1/assets/prices/sync?force=true", null, CancellationToken.None);
 
         var body = await response.Content.ReadFromJsonAsync<JsonElement>(CancellationToken.None);
 
@@ -39,6 +39,27 @@ public class SyncMarketPricesEndpointTests : ApiTestBase
         Assert.AreEqual(0, body.GetProperty("notFound").GetInt32());
         Assert.IsNotNull(storedBtc);
         Assert.AreEqual(FakeMarketPriceProvider.BtcPrice, (decimal)storedBtc.MarketPrice.Price);
+    }
+
+    [TestMethod]
+    [TestCategory("SyncMarketPricesEndpoint Tests")]
+    public async Task Should_Skip_Recently_Updated_Assets_When_Not_Forced()
+    {
+        var bitcoin = new Asset(new AssetName("Bitcoin"), new Ticker("BTC"),
+            EAssetType.Cryptocurrency, new MarketPrice(300000m));
+
+        await using (var setupContext = CreateDbContext())
+        {
+            await setupContext.Assets.AddAsync(bitcoin, CancellationToken.None);
+            await setupContext.SaveChangesAsync(CancellationToken.None);
+        }
+
+        using var response = await Client.PostAsync("v1/assets/prices/sync", null, CancellationToken.None);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>(CancellationToken.None);
+
+        Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        Assert.AreEqual(0, body.GetProperty("updated").GetInt32());
+        Assert.AreEqual(1, body.GetProperty("skipped").GetInt32());
     }
 
     [TestMethod]

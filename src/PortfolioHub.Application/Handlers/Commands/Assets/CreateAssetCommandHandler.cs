@@ -19,7 +19,8 @@ public class CreateAssetCommandHandler(IAssetRepository assetRepository)
         Asset asset = new(command.AssetName, command.Ticker, command.Type, command.MarketPrice);
         await assetRepository.CreateAsync(asset, cancellationToken);
 
-        return new AssetDTO(asset.Id, asset.Name, asset.Ticker,
-            asset.Type, asset.MarketPrice.Price);
+        return new AssetDTO
+            (asset.Id, asset.Name, asset.Ticker,
+                asset.MarketPrice.LastUpdate, asset.Type, asset.MarketPrice.Price);
     }
 }

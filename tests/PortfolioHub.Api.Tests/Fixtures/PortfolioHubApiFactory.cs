@@ -19,6 +19,9 @@ public sealed class PortfolioHubApiFactory(string connectionString)
     {
         builder.UseEnvironment("Testing");
 
+        //rate limiting para testes
+        builder.UseSetting("PriceSync:ManualSyncPermitLimit", "1000");
+
         builder.ConfigureTestServices(services =>
         {
             //Aplica a configuração do Bd de teste

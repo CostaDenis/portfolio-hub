@@ -12,14 +12,17 @@ public class SyncMarketPricesEndpoint : IEndpoint
             .WithName("SyncMarketPrices")
             .WithSummary("Sincroniza os preços dos Ativos")
             .WithDescription("Busca os preços atuais nas APIs de mercado e atualiza os Ativos")
-            .Produces<SyncMarketPricesResultDTO>(StatusCodes.Status200OK);
+            .RequireRateLimiting("price-sync")
+            .Produces<SyncMarketPricesResultDTO>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status429TooManyRequests);
 
     private static async Task<IResult> HandleAsync(
         SyncMarketPricesCommandHandler handler,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        bool force = false
     )
     {
-        var result = await handler.HandleAsync(new SyncMarketPricesCommand(true), cancellationToken);
+        var result = await handler.HandleAsync(new SyncMarketPricesCommand(force), cancellationToken);
 
         return Results.Ok(result);
     }

@@ -34,4 +34,12 @@ public class AssetApiClient(HttpClient client)
             $"v1/assets/{assetId}/market-price", new UpdateMarketPriceRequest(price), cancellationToken);
         return await ReadResultAsync(response, cancellationToken);
     }
+
+    public async Task<ApiResult<SyncMarketPricesResponse>> SyncMarketPricesAsync(bool force,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await _client.PostAsync(
+            $"v1/assets/prices/sync?force={(force ? "true" : "false")}", null, cancellationToken);
+        return await ReadResultAsync<SyncMarketPricesResponse>(response, cancellationToken);
+    }
 }

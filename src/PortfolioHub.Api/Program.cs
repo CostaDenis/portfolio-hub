@@ -13,6 +13,7 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseCors(BuilderExtension.WebCorsPolicy);
+app.UseRateLimiter();
 app.MapEndpoints();
 app.ConfigureDevEnvironment();
 

@@ -47,6 +47,9 @@ public class AssetsPage : ComponentBase, IDisposable
     protected string? priceError;
     protected bool savingPrice;
 
+    protected bool syncing;
+    protected string? syncError;
+
     protected IReadOnlyList<AssetResponse> FilteredAssets => assets
         .Where(asset => typeFilter is null || asset.Type == typeFilter)
         .Where(asset => string.IsNullOrWhiteSpace(search)
@@ -93,7 +96,7 @@ public class AssetsPage : ComponentBase, IDisposable
         formName = formTicker = "";
         formType = "Stock";
         formPrice = null;
-        formError = statusMessage = null;
+        formError = statusMessage = syncError = null;
     }
 
     protected void OpenEditForm(AssetResponse asset)
@@ -106,7 +109,7 @@ public class AssetsPage : ComponentBase, IDisposable
         formTicker = asset.Ticker;
         formType = asset.Type;
         formPrice = null;
-        formError = statusMessage = null;
+        formError = statusMessage = syncError = null;
     }
 
     protected void CloseForm()
@@ -190,7 +193,7 @@ public class AssetsPage : ComponentBase, IDisposable
     {
         editingPriceAssetId = asset.AssetId;
         priceDraft = asset.Price;
-        priceError = statusMessage = null;
+        priceError = statusMessage = syncError = null;
     }
 
     protected void CancelPriceEdit()
@@ -223,7 +226,11 @@ public class AssetsPage : ComponentBase, IDisposable
                 return;
             }
 
-            var updated = ReplaceAsset(assetId, asset => asset with { Price = priceDraft.Value });
+            var updated = ReplaceAsset(assetId, asset => asset with
+            {
+                Price = priceDraft.Value,
+                LastUpdate = DateTime.UtcNow,
+            });
             statusMessage = $"Preço de {updated?.Ticker} atualizado para {FormatPrice(priceDraft.Value)}.";
             CancelPriceEdit();
         }
@@ -236,6 +243,71 @@ public class AssetsPage : ComponentBase, IDisposable
             savingPrice = false;
         }
     }
+
+    protected async Task SyncPricesAsync()
+    {
+        if (syncing)
+            return;
+
+        syncing = true;
+        syncError = statusMessage = null;
+
+        try
+        {
+            // Botão manual: força a busca mesmo dos ativos atualizados há pouco.
+            var result = await Api.SyncMarketPricesAsync(force: true, cts.Token);
+
+            if (!result.Succeeded)
+            {
+                syncError = result.Error;
+                return;
+            }
+
+            await RefreshAssetsAsync();
+            statusMessage = SyncSummary(result.Value!);
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
+            // Página fechada durante a sincronização.
+        }
+        catch (Exception exception) when (exception is HttpRequestException or System.Text.Json.JsonException)
+        {
+            syncError = "Não foi possível falar com a API. Tente novamente.";
+        }
+        finally
+        {
+            syncing = false;
+        }
+    }
+
+    // Recarrega a lista sem voltar para o esqueleto de carregamento.
+    private async Task RefreshAssetsAsync()
+        => assets = (await Api.GetAssetsAsync(cts.Token)).ToList();
+
+    private static string SyncSummary(SyncMarketPricesResponse result)
+    {
+        if (result.Updated == 0 && result.NotFound == 0 && result.Skipped == 0)
+            return "Nenhum ativo para sincronizar.";
+
+        List<string> parts = [Plural(result.Updated, "preço atualizado", "preços atualizados")];
+
+        if (result.NotFound > 0)
+            parts.Add($"{Plural(result.NotFound, "não encontrado", "não encontrados")} nas APIs de mercado");
+
+        if (result.Skipped > 0)
+            parts.Add($"{Plural(result.Skipped, "não atualizado", "não atualizados")} (fora do horário de pregão ou atualizado há pouco)");
+
+        return string.Join(" · ", parts) + ".";
+    }
+
+    private static string Plural(int count, string singular, string plural)
+        => $"{count} {(count == 1 ? singular : plural)}";
+
+    protected static string FormatLastUpdate(DateTime lastUpdate)
+        => RelativeTimeFormatter.Format(RelativeTimeFormatter.AsUtc(lastUpdate), DateTime.UtcNow);
+
+    protected static string LastUpdateTitle(DateTime lastUpdate)
+        => $"Atualizado em {RelativeTimeFormatter.AsUtc(lastUpdate).ToLocalTime():dd/MM/yyyy HH:mm}";
 
     private AssetResponse? ReplaceAsset(Guid assetId, Func<AssetResponse, AssetResponse> update)
     {

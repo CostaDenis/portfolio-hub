@@ -46,6 +46,10 @@ public abstract class BaseApiClient(HttpClient client)
     protected static async Task<string?> ReadErrorAsync(HttpResponseMessage responseMessage, CancellationToken cancellationToken)
     {
 
+        // O rate limiter responde 429 sem corpo, então a mensagem fica aqui.
+        if (responseMessage.StatusCode == HttpStatusCode.TooManyRequests)
+            return "Muitas tentativas seguidas. Aguarde um minuto e tente novamente.";
+
         if (responseMessage.StatusCode is not (HttpStatusCode.BadRequest or HttpStatusCode.NotFound or HttpStatusCode.Conflict))
         {
             //caso de sucesso

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.RateLimiting;
 using PortfolioHub.Api.Exceptions;
 using PortfolioHub.Api.Options;
 using PortfolioHub.Api.Workers;
@@ -55,6 +56,18 @@ public static class BuilderExtension
 
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
+
+        var permitLimit = builder.Configuration.GetValue("PriceSync:ManualSyncPermitLimit", 1);
+
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.AddFixedWindowLimiter("price-sync", o =>
+            {
+                o.PermitLimit = permitLimit;
+                o.Window = TimeSpan.FromMinutes(1);
+            });
+        });
 
         //Sincronização de preços
         builder.Services.Configure<PriceSyncOptions>(builder.Configuration.GetSection("PriceSync"));

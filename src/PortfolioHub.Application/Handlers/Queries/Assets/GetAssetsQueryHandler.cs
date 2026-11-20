@@ -16,6 +16,7 @@ public class GetAssetsQueryHandler(IAssetRepository assetRepository)
                 asset.Id,
                 asset.Name,
                 asset.Ticker,
+                asset.MarketPrice.LastUpdate,
                 asset.Type,
                 asset.MarketPrice.Price.Value
             ));
