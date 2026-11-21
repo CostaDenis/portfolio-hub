@@ -11,6 +11,7 @@ builder.AddCrossOrigin();
 
 var app = builder.Build();
 
+app.ApplyMigrations();
 app.UseExceptionHandler();
 app.UseCors(BuilderExtension.WebCorsPolicy);
 app.UseRateLimiter();
